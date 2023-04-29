@@ -1,0 +1,35 @@
+server:
+  port: 8083
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/blas
+    username: root
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+blas:
+  aliasBlasPrivateKey: blasSecretKey
+  certificate: BlasSecretKey.p12
+  service:
+    serviceName: blas-payment-gateway
+  gate-interceptor:
+    enableLogRequest: true
+    enableLogLocalRequest: false
+  blas-idp:
+    isSendEmailAlert: true
+    jwt:
+      timeToExpiredInternalToken: 120 #2 minutes
+  blas-payment-gateway:
+    stripe:
+      publicKey: pk_test_51N24huL1cmxigSStQZYtGY6tOFtkYx58UFg6rZ23ztdNanXvWFUny4Q56RtpnVRAMTvCDA54SSQuSqUX9rPf7oKp00VTzCV4FB
+
+#logging:
+#  file:
+#    name: application.log
+#  level:
+#    root: DEBUG
+#    org.springframework: DEBUG
+#    com.blas: DEBUG
