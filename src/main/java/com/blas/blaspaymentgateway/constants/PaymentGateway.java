@@ -9,4 +9,5 @@ public class PaymentGateway {
   public static final String CARD_ID_NOT_FOUND = "CARD_ID_NOT_FOUND";
   public static final String CARD_EXISTED = "CARD EXISTED";
   public static final String INVALID_CARD = "INVALID CARD";
+  public static final String TRANSACTION_FAILED = "FAILED";
 }

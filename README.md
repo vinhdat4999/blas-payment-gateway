@@ -5,4 +5,4 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes         |
 |---------|--------------|-----------------------|
-| 0.0.0   | dd/mm/2023   | Release first version |
+| 1.0.0   | 30/04/2023   | Release first version |
