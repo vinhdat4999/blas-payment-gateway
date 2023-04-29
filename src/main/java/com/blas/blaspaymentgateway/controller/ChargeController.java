@@ -53,7 +53,7 @@ public class ChargeController {
   private BlasPaymentTransactionLogService blasPaymentTransactionLogService;
 
   @PostMapping(value = "/charge")
-  public ResponseEntity<?> charge(@RequestBody ChargeRequest chargeRequest) {
+  public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
     BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
         .paymentTransactionLogId(genUUID())
         .transactionTime(now())
@@ -72,7 +72,7 @@ public class ChargeController {
       charge = paymentsService.charge(chargeRequest);
       blasPaymentTransactionLog.setStripeTransactionId(charge.getId());
       blasPaymentTransactionLog.setAmount(charge.getAmountCaptured());
-      blasPaymentTransactionLog.setReceipt_url(charge.getReceiptUrl());
+      blasPaymentTransactionLog.setReceiptUrl(charge.getReceiptUrl());
       blasPaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
       blasPaymentTransactionLog.setCardType(
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());

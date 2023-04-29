@@ -46,7 +46,7 @@ public class BlasPaymentTransactionLog {
   private long amount;
 
   @Column(name = "receipt_url", length = 200, nullable = false)
-  private String receipt_url;
+  private String receiptUrl;
 
   @Column(name = "status", length = 20, nullable = false)
   @NotEmpty

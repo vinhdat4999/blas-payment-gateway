@@ -78,8 +78,8 @@ public class CardController {
       return ResponseEntity.ok("Card successfully added. Card ID: " + cardId);
     } catch (IllegalBlockSizeException | BadPaddingException |
              InvalidAlgorithmParameterException | InvalidKeyException |
-             NoSuchPaddingException | NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
+             NoSuchPaddingException | NoSuchAlgorithmException exception) {
+      throw new BadRequestException(exception);
     }
   }
 }

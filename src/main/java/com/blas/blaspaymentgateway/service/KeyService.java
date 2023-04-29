@@ -2,6 +2,7 @@ package com.blas.blaspaymentgateway.service;
 
 import static com.blas.blascommon.security.SecurityUtils.getPrivateKeyAesFromCertificate;
 
+import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.properties.BlasPrivateKeyConfiguration;
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -27,8 +28,8 @@ public class KeyService {
       return getPrivateKeyAesFromCertificate(blasPrivateKeyConfiguration.getCertificate(),
           blasPrivateKeyConfiguration.getAliasBlasPrivateKey(), getCertPassword);
     } catch (KeyStoreException | CertificateException | IOException | NoSuchAlgorithmException |
-             UnrecoverableKeyException e) {
-      throw new RuntimeException(e);
+             UnrecoverableKeyException exception) {
+      throw new BadRequestException(exception);
     }
   }
 }
