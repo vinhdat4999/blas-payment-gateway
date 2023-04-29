@@ -71,4 +71,15 @@ public class StripeService {
     Map<String, Object> params = Map.of("card", cardMap);
     return Token.create(params);
   }
+
+  public Token getStripeTransactionTokenWithRawCardInfo(Card card)
+      throws StripeException {
+    final Map<String, Object> cardMap = Map.ofEntries(
+        Map.entry("number", card.getCardNumber()),
+        Map.entry("exp_month", Integer.parseInt(card.getExpMonth())),
+        Map.entry("exp_year", Integer.parseInt(card.getExpYear())),
+        Map.entry("cvc", card.getCvc()));
+    Map<String, Object> params = Map.of("card", cardMap);
+    return Token.create(params);
+  }
 }

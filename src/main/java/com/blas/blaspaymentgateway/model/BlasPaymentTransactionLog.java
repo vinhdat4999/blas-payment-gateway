@@ -45,6 +45,10 @@ public class BlasPaymentTransactionLog {
   @Column(name = "amount", nullable = false)
   private long amount;
 
+
+  @Column(name = "currency", nullable = false)
+  private String currency;
+
   @Column(name = "receipt_url", length = 200, nullable = false)
   private String receiptUrl;
 

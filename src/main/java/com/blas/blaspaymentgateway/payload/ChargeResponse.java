@@ -9,6 +9,7 @@ import lombok.Data;
 public class ChargeResponse {
 
   private String transactionId;
+  private String stripeTransactionId;
   private LocalDateTime transactionTime;
   private String cardId;
   private String username;

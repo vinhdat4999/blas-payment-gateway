@@ -8,8 +8,7 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_F
 import static java.time.LocalDateTime.now;
 
 import com.blas.blascommon.core.service.AuthUserService;
-import com.blas.blascommon.exceptions.types.BadGatewayException;
-import com.blas.blascommon.exceptions.types.BadRequestException;
+import com.blas.blaspaymentgateway.exception.types.PaymentException;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.payload.ChargeRequest;
 import com.blas.blaspaymentgateway.payload.ChargeResponse;
@@ -59,12 +58,17 @@ public class ChargeController {
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(getUsernameLoggedIn()))
         .amount(chargeRequest.getAmount())
+        .currency(chargeRequest.getCurrency().name())
         .status(TRANSACTION_FAILED)
         .description(chargeRequest.getDescription())
         .build();
     if (!getUsernameLoggedIn().equals(
         cardService.getCardInfoByCardId(chargeRequest.getCardId()).getAuthUser().getUsername())) {
-      throw new BadRequestException(INVALID_CARD);
+      blasPaymentTransactionLog.setLogMessage1(TRANSACTION_FAILED);
+      blasPaymentTransactionLog.setLogMessage2("CARD ID: " + chargeRequest.getCardId());
+      blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
+      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(), null,
+          INVALID_CARD);
     }
     blasPaymentTransactionLog.setCard(cardService.getCardInfoByCardId(chargeRequest.getCardId()));
     Charge charge;
@@ -77,23 +81,35 @@ public class ChargeController {
       blasPaymentTransactionLog.setCardType(
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());
     } catch (StripeException exception) {
+      blasPaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
+      blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
+      blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
-      throw new BadGatewayException(exception.getMessage());
+      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
+          blasPaymentTransactionLog.getStripeTransactionId(),
+          exception.getMessage());
     } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
+      blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
-      throw new BadRequestException(exception.getMessage());
+      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
+          blasPaymentTransactionLog.getStripeTransactionId(),
+          exception.getMessage());
     }
     blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
     return ResponseEntity.ok(
-        buildChargeResponse(charge, chargeRequest.getCardId(), getUsernameLoggedIn()));
+        buildChargeResponse(blasPaymentTransactionLog.getPaymentTransactionLogId(), charge,
+            chargeRequest.getCardId(), getUsernameLoggedIn()));
   }
 
-  private ChargeResponse buildChargeResponse(Charge charge, String cardId, String username) {
+  private ChargeResponse buildChargeResponse(String transactionId, Charge charge, String cardId,
+      String username) {
     return ChargeResponse.builder()
-        .transactionId(charge.getId())
+        .transactionId(transactionId)
+        .stripeTransactionId(charge.getId())
+        .stripeTransactionId(charge.getId())
         .amountCaptured(
             (double) (charge.getAmountCaptured()) / 100 + SPACE + charge.getCurrency()
                 .toUpperCase())

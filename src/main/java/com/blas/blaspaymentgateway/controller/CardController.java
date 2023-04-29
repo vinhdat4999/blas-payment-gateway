@@ -65,7 +65,7 @@ public class CardController {
           .isActive(true)
           .build();
       try {
-        stripeService.getStripeTransactionToken(card);
+        stripeService.getStripeTransactionTokenWithRawCardInfo(card);
       } catch (StripeException exception) {
         throw new BadRequestException(exception.getMessage());
       }
