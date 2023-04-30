@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -53,6 +54,9 @@ public class Card {
   @Column(name = "cvc", length = 200, nullable = false)
   @NotEmpty
   private String cvc;
+
+  @Column(name = "added_time", nullable = false)
+  private LocalDateTime addedTime;
 
   @Column(name = "is_active", nullable = false)
   private boolean isActive;

@@ -2,16 +2,21 @@ package com.blas.blaspaymentgateway.controller;
 
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
+import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ADDED_SUCCESSFULLY;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_EXISTED;
+import static com.blas.blaspaymentgateway.utils.CardUtils.maskCardNumber;
+import static java.time.LocalDateTime.now;
 
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
+import com.blas.blascommon.payload.CardRequest;
+import com.blas.blascommon.payload.CardResponse;
 import com.blas.blaspaymentgateway.model.Card;
-import com.blas.blaspaymentgateway.payload.CardRequest;
 import com.blas.blaspaymentgateway.service.CardService;
 import com.blas.blaspaymentgateway.service.KeyService;
 import com.blas.blaspaymentgateway.service.StripeService;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Token;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -46,7 +51,7 @@ public class CardController {
   private KeyService keyService;
 
   @PostMapping(value = "/add-card")
-  public ResponseEntity<String> charge(@RequestBody CardRequest cardRequest,
+  public ResponseEntity<CardResponse> charge(@RequestBody CardRequest cardRequest,
       Authentication authentication) {
     try {
       final String blasSecretKey = keyService.getBlasPrivateKey();
@@ -62,12 +67,15 @@ public class CardController {
           .expMonth(cardRequest.getExpMonth())
           .expYear(cardRequest.getExpYear())
           .cvc(cardRequest.getCvc())
+          .addedTime(now())
           .isActive(true)
           .build();
+      final String rawCardNumber = card.getCardNumber();
+      Token token;
       try {
-        stripeService.getStripeTransactionTokenWithRawCardInfo(card);
+        token = stripeService.getStripeTransactionTokenWithRawCardInfo(card);
       } catch (StripeException exception) {
-        throw new BadRequestException(exception.getMessage());
+        throw new BadRequestException(exception.getStripeError().getMessage());
       }
       card.setCardNumber(aesEncrypt(blasSecretKey, card.getCardNumber()));
       card.setCardHolder(aesEncrypt(blasSecretKey, card.getCardHolder()));
@@ -75,7 +83,13 @@ public class CardController {
       card.setExpYear(aesEncrypt(blasSecretKey, card.getExpYear()));
       card.setCvc(aesEncrypt(blasSecretKey, card.getCvc()));
       String cardId = cardService.addNewCard(card);
-      return ResponseEntity.ok("Card successfully added. Card ID: " + cardId);
+      return ResponseEntity.ok(CardResponse.builder()
+          .cardId(cardId)
+          .maskedCardNumber(maskCardNumber(rawCardNumber))
+          .cardType(token.getCard().getBrand().toUpperCase())
+          .addedTime(now())
+          .message(CARD_ADDED_SUCCESSFULLY)
+          .build());
     } catch (IllegalBlockSizeException | BadPaddingException |
              InvalidAlgorithmParameterException | InvalidKeyException |
              NoSuchPaddingException | NoSuchAlgorithmException exception) {
