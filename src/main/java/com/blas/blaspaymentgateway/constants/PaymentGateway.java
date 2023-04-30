@@ -12,4 +12,5 @@ public class PaymentGateway {
   public static final String TRANSACTION_FAILED = "FAILED";
   public static final String CARD_ADDED_SUCCESSFULLY = "Card successfully added";
   public static final String CARD_ID_SPACE_LABEL = "CARD ID: ";
+  public static final String SUBJECT_EMAIL_RECEIPT = "BLAS PAYMENT RECEIPT";
 }
