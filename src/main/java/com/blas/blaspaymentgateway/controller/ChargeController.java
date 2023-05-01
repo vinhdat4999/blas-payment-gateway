@@ -1,27 +1,22 @@
 package com.blas.blaspaymentgateway.controller;
 
-import static com.blas.blascommon.constants.Response.CANNOT_CONNECT_TO_HOST;
 import static com.blas.blascommon.enums.EmailTemplate.PAYMENT_RECEIPT;
-import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
-import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blascommon.utils.StringUtils.SPACE;
-import static com.blas.blascommon.utils.httprequest.PostRequest.sendPostRequestWithJsonArrayPayload;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ID_SPACE_LABEL;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INVALID_CARD;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_FAILED;
-import static com.blas.blaspaymentgateway.utils.CardUtils.maskCardNumber;
+import static com.blas.blaspaymentgateway.utils.PaymentUtils.genTransactionId;
+import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.model.AuthUser;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.PaymentException;
-import com.blas.blascommon.exceptions.types.ServiceUnavailableException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.ChargeResponse;
@@ -35,19 +30,15 @@ import com.blas.blaspaymentgateway.service.KeyService;
 import com.blas.blaspaymentgateway.service.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Map;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -91,16 +82,16 @@ public class ChargeController {
 
   @Lazy
   @Autowired
-  private JwtTokenUtil jwtTokenUtil;
+  private CentralizedLogService centralizedLogService;
 
   @Lazy
   @Autowired
-  private CentralizedLogService centralizedLogService;
+  private JwtTokenUtil jwtTokenUtil;
 
   @PostMapping(value = "/charge")
   public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
     BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
-        .paymentTransactionLogId(genUUID())
+        .paymentTransactionLogId(genTransactionId())
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(getUsernameLoggedIn()))
         .amount(chargeRequest.getAmount())
@@ -181,16 +172,8 @@ public class ChargeController {
         Map.entry("amount", String.valueOf((double) (charge.getAmountCaptured()) / 100)),
         Map.entry("currency", charge.getCurrency().toUpperCase())
     ));
-    try {
-      sendPostRequestWithJsonArrayPayload(blasEmailConfiguration.getEndpointHtmlEmail(), null,
-          jwtTokenUtil.generateInternalSystemToken(), new JSONArray(List.of(htmlEmailRequest)));
-    } catch (IOException | JSONException e) {
-      centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
-          e.getCause() == null ? EMPTY : e.getCause().toString(),
-          new JSONArray(List.of(htmlEmailRequest)).toString(), null, null,
-          String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
-      throw new ServiceUnavailableException(CANNOT_CONNECT_TO_HOST);
-    }
+    CardController.sendEmail(htmlEmailRequest, blasEmailConfiguration, jwtTokenUtil,
+        centralizedLogService, serviceName, isSendEmailAlert);
   }
 
   private ChargeResponse buildChargeResponse(String transactionId, Charge charge, String cardId,
