@@ -3,9 +3,11 @@ package com.blas.blaspaymentgateway.controller;
 import static com.blas.blascommon.constants.Response.CANNOT_CONNECT_TO_HOST;
 import static com.blas.blascommon.enums.EmailTemplate.ADD_CARD_SUCCESS;
 import static com.blas.blascommon.enums.LogType.ERROR;
+import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.utils.httprequest.PostRequest.sendPostRequestWithJsonArrayPayload;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ADDED_SUCCESSFULLY;
+import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_EXISTED;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_ADD_NEW_CARD_SUCCESSFULLY;
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
@@ -103,11 +105,11 @@ public class CardController {
       Authentication authentication) {
     try {
       final String blasSecretKey = keyService.getBlasPrivateKey();
-//      for (Card card : cardService.getAllCards()) {
-//        if (aesDecrypt(blasSecretKey, card.getCardNumber()).equals(cardRequest.getCardNumber())) {
-//          throw new BadRequestException(CARD_EXISTED);
-//        }
-//      }
+      for (Card card : cardService.getAllCards()) {
+        if (aesDecrypt(blasSecretKey, card.getCardNumber()).equals(cardRequest.getCardNumber())) {
+          throw new BadRequestException(CARD_EXISTED);
+        }
+      }
       Card card = Card.builder()
           .authUser(authUserService.getAuthUserByUsername(authentication.getName()))
           .cardNumber(cardRequest.getCardNumber())
