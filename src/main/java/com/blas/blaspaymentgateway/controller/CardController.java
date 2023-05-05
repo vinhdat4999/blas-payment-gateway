@@ -12,6 +12,7 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_ADD_N
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.springframework.http.HttpStatus.OK;
 
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
@@ -37,6 +38,7 @@ import java.util.Map;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,14 +106,16 @@ public class CardController {
   public ResponseEntity<CardResponse> charge(@RequestBody CardRequest cardRequest,
       Authentication authentication) {
     try {
+      String username = authentication.getName();
       final String blasSecretKey = keyService.getBlasPrivateKey();
       for (Card card : cardService.getAllCards()) {
-        if (aesDecrypt(blasSecretKey, card.getCardNumber()).equals(cardRequest.getCardNumber())) {
+        if (aesDecrypt(blasSecretKey, card.getCardNumber()).equals(cardRequest.getCardNumber())
+            && StringUtils.equals(username, card.getAuthUser().getUsername())) {
           throw new BadRequestException(CARD_EXISTED);
         }
       }
       Card card = Card.builder()
-          .authUser(authUserService.getAuthUserByUsername(authentication.getName()))
+          .authUser(authUserService.getAuthUserByUsername(username))
           .cardNumber(cardRequest.getCardNumber())
           .cardHolder(cardRequest.getCardHolder())
           .expMonth(cardRequest.getExpMonth())
@@ -136,6 +140,7 @@ public class CardController {
       new Thread(() -> sendEmailAddCardSuccessfully(card.getAuthUser().getUserDetail().getEmail(),
           maskCardNumber(rawCardNumber), token.getCard().getBrand().toUpperCase())).start();
       return ResponseEntity.ok(CardResponse.builder()
+          .statusCode(String.valueOf(OK.value()))
           .cardId(cardId)
           .maskedCardNumber(maskCardNumber(rawCardNumber))
           .cardType(token.getCard().getBrand().toUpperCase())

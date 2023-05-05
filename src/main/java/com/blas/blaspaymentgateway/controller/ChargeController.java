@@ -11,6 +11,7 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_F
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.genTransactionId;
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
+import static org.springframework.http.HttpStatus.OK;
 
 import com.blas.blascommon.core.model.AuthUser;
 import com.blas.blascommon.core.service.AuthUserService;
@@ -182,6 +183,7 @@ public class ChargeController {
       String username)
       throws InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
     return ChargeResponse.builder()
+        .statusCode(String.valueOf(OK.value()))
         .transactionId(transactionId)
         .transactionTime(
             LocalDateTime.ofEpochSecond(charge.getCreated(), 0, ZoneOffset.UTC).minusHours(-7))
