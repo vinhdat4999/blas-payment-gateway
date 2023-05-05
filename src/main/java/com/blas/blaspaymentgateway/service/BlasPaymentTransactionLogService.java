@@ -6,4 +6,6 @@ public interface BlasPaymentTransactionLogService {
 
   BlasPaymentTransactionLog createBlasPaymentTransactionLog(
       BlasPaymentTransactionLog blasPaymentTransactionLog);
+
+  boolean isExistedId(String blasPaymentTransactionLogId);
 }

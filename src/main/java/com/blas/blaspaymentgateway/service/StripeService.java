@@ -51,7 +51,7 @@ public class StripeService {
 
   public Charge charge(final ChargeRequest chargeRequest)
       throws StripeException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
-    Card card = cardService.getCardInfoByCardId(chargeRequest.getCardId());
+    Card card = cardService.getCardInfoByCardId(chargeRequest.getCardId(), true);
     final Map<String, Object> chargeParams = Map.ofEntries(
         Map.entry("amount", chargeRequest.getAmount()),
         Map.entry("currency", chargeRequest.getCurrency()),

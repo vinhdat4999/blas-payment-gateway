@@ -11,7 +11,7 @@ public interface CardService {
 
   List<Card> getAllCards();
 
-  Card getCardInfoByCardId(String cardId);
+  Card getCardInfoByCardId(String cardId, boolean isAbstractMessage);
 
   Card getCardInfoByCardNumber(String cardNumber);
 }

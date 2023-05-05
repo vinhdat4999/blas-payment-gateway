@@ -21,4 +21,9 @@ public class BlasPaymentTransactionLogServiceImpl implements BlasPaymentTransact
       BlasPaymentTransactionLog blasPaymentTransactionLog) {
     return blasPaymentTransactionLogDao.save(blasPaymentTransactionLog);
   }
+
+  @Override
+  public boolean isExistedId(String blasPaymentTransactionLogId) {
+    return blasPaymentTransactionLogDao.findById(blasPaymentTransactionLogId).isPresent();
+  }
 }

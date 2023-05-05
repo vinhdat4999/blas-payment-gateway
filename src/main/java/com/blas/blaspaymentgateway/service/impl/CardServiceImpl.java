@@ -3,8 +3,10 @@ package com.blas.blaspaymentgateway.service.impl;
 import static com.blas.blascommon.constants.Response.USER_ID_NOT_FOUND;
 import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ID_NOT_FOUND;
+import static com.blas.blaspaymentgateway.constants.PaymentGateway.INVALID_CARD;
 
 import com.blas.blascommon.core.dao.AuthUserDao;
+import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.NotFoundException;
 import com.blas.blaspaymentgateway.dao.CardDao;
 import com.blas.blaspaymentgateway.model.Card;
@@ -45,8 +47,11 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
-  public Card getCardInfoByCardId(String cardId) {
-    return cardDao.findById(cardId).orElseThrow(() -> new NotFoundException(CARD_ID_NOT_FOUND));
+  public Card getCardInfoByCardId(String cardId, boolean isAbstractMessage) {
+    return cardDao.findById(cardId)
+        .orElseThrow(() -> isAbstractMessage ?
+            new BadRequestException(INVALID_CARD) :
+            new NotFoundException(CARD_ID_NOT_FOUND));
   }
 
   @Override

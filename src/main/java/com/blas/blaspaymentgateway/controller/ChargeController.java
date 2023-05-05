@@ -56,6 +56,9 @@ public class ChargeController {
   @Value("${blas.service.serviceName}")
   private String serviceName;
 
+  @Value("${blas.blas-payment-gateway.lengthOfId}")
+  private int lengthOfId;
+
   @Lazy
   @Autowired
   private StripeService paymentsService;
@@ -91,7 +94,7 @@ public class ChargeController {
   @PostMapping(value = "/charge")
   public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
     BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
-        .paymentTransactionLogId(genTransactionId())
+        .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(getUsernameLoggedIn()))
         .amount(chargeRequest.getAmount())
@@ -100,15 +103,15 @@ public class ChargeController {
         .description(chargeRequest.getDescription())
         .build();
     String cardId = chargeRequest.getCardId();
-    if (!getUsernameLoggedIn().equals(
-        cardService.getCardInfoByCardId(cardId).getAuthUser().getUsername())) {
+    Card card = cardService.getCardInfoByCardId(cardId, true);
+    if (!getUsernameLoggedIn().equals(card.getAuthUser().getUsername())) {
       blasPaymentTransactionLog.setLogMessage1(TRANSACTION_FAILED);
       blasPaymentTransactionLog.setLogMessage2(CARD_ID_SPACE_LABEL + cardId);
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
       throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
           INVALID_CARD);
     }
-    blasPaymentTransactionLog.setCard(cardService.getCardInfoByCardId(cardId));
+    blasPaymentTransactionLog.setCard(card);
     Charge charge;
     try {
       charge = paymentsService.charge(chargeRequest);
@@ -120,8 +123,7 @@ public class ChargeController {
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());
       new Thread(() -> {
         try {
-          sendReceiptEmail(blasPaymentTransactionLog,
-              cardService.getCardInfoByCardId(cardId), charge);
+          sendReceiptEmail(blasPaymentTransactionLog, card, charge);
         } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  NoSuchPaddingException | BadPaddingException | NoSuchAlgorithmException |
                  InvalidKeyException exception) {
@@ -166,7 +168,7 @@ public class ChargeController {
         Map.entry("transactionTime", blasPaymentTransaction.getTransactionTime().toString()),
         Map.entry("cardType", blasPaymentTransaction.getCardType()),
         Map.entry("cardNumber", maskCardNumber(aesDecrypt(keyService.getBlasPrivateKey(),
-            cardService.getCardInfoByCardId(card.getCardId()).getCardNumber()))),
+            cardService.getCardInfoByCardId(card.getCardId(), true).getCardNumber()))),
         Map.entry("status", charge.getStatus().toUpperCase()),
         Map.entry("description", charge.getDescription()),
         Map.entry("amount", String.valueOf((double) (charge.getAmountCaptured()) / 100)),
@@ -185,7 +187,7 @@ public class ChargeController {
             LocalDateTime.ofEpochSecond(charge.getCreated(), 0, ZoneOffset.UTC).minusHours(-7))
         .cardId(cardId)
         .maskedCardNumber(maskCardNumber(aesDecrypt(keyService.getBlasPrivateKey(),
-            cardService.getCardInfoByCardId(cardId).getCardNumber())))
+            cardService.getCardInfoByCardId(cardId, true).getCardNumber())))
         .cardType(charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase())
         .username(username)
         .amountCaptured(
