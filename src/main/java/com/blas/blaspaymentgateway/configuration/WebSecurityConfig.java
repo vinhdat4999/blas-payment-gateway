@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
@@ -40,18 +41,17 @@ public class WebSecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, JwtRequestFilter jwtRequestFilter,
       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
-    http.csrf().disable();
-    http.authorizeHttpRequests()
-        .anyRequest()
-        .hasAnyRole("ADMIN", "BOD", "MAINTAINER", "MANAGER", "USER")
-        .and()
-        .exceptionHandling()
-        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-        .and()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-    return http.build();
+    http.csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(authorize -> authorize.requestMatchers("/auth/**")
+            .permitAll()
+            .anyRequest()
+            .hasAnyRole("ADMIN", "BOD", "MAINTAINER", "MANAGER", "USER"));
+    http.exceptionHandling(
+            authorize -> authorize.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+        .sessionManagement(
+            authorize -> authorize.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+    return http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+        .build();
   }
 
   @Bean
