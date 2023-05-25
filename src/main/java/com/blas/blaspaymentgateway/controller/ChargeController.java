@@ -31,7 +31,6 @@ import com.blas.blaspaymentgateway.service.KeyService;
 import com.blas.blaspaymentgateway.service.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
-import jakarta.servlet.http.HttpServletRequest;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -94,28 +93,7 @@ public class ChargeController {
   private JwtTokenUtil jwtTokenUtil;
 
   @PostMapping(value = "/charge")
-  public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest, HttpServletRequest request) {
-
-    String ipAddress = request.getHeader("X-Forwarded-For");
-    if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-      ipAddress = request.getHeader("Proxy-Client-IP");
-    }
-    if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-      ipAddress = request.getHeader("WL-Proxy-Client-IP");
-    }
-    if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-      ipAddress = request.getHeader("HTTP_CLIENT_IP");
-    }
-    if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-      ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
-    }
-    if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-      ipAddress = request.getRemoteAddr();
-    }
-    System.out.println("AA: " + ipAddress);
-
-
-
+  public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
     BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
         .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
         .transactionTime(now())
