@@ -1,6 +1,7 @@
 package com.blas.blaspaymentgateway.controller;
 
 import static com.blas.blascommon.constants.Response.CANNOT_CONNECT_TO_HOST;
+import static com.blas.blascommon.constants.Response.HTTP_STATUS_NOT_200;
 import static com.blas.blascommon.enums.EmailTemplate.ADD_CARD_SUCCESS;
 import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
@@ -22,6 +23,7 @@ import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.CardRequest;
 import com.blas.blascommon.payload.CardResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
+import com.blas.blascommon.payload.HttpResponse;
 import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.CardService;
@@ -44,6 +46,7 @@ import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,9 +94,13 @@ public class CardController {
       BlasEmailConfiguration blasEmailConfiguration, JwtTokenUtil jwtTokenUtil,
       CentralizedLogService centralizedLogService, String serviceName, boolean isSendEmailAlert) {
     try {
-      sendPostRequestWithJsonArrayPayload(blasEmailConfiguration.getEndpointHtmlEmail(), null,
+      HttpResponse response = sendPostRequestWithJsonArrayPayload(
+          blasEmailConfiguration.getEndpointHtmlEmail(), null,
           jwtTokenUtil.generateInternalSystemToken(), new JSONArray(List.of(htmlEmailRequest)));
-    } catch (IOException | JSONException e) {
+      if (response.getStatusCode() != HttpStatus.OK.value()) {
+        throw new BadRequestException(HTTP_STATUS_NOT_200);
+      }
+    } catch (IOException | JSONException | BadRequestException e) {
       centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
           e.getCause() == null ? EMPTY : e.getCause().toString(),
           new JSONArray(List.of(htmlEmailRequest)).toString(), null, null,

@@ -6,5 +6,6 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes             |
 |---------|--------------|---------------------------|
+| 1.2.0   | 02/06/2023   | Upgrade blas-common 3.0.0 |
 | 1.1.0   | 25/04/2023   | Upgrade spring boot 3.1.0 |
 | 1.0.0   | 30/04/2023   | Release first version     |
