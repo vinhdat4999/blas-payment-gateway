@@ -5,6 +5,7 @@ import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.utils.StringUtils.SPACE;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ID_SPACE_LABEL;
+import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_CARD;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INVALID_CARD;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_FAILED;
@@ -111,6 +112,10 @@ public class ChargeController {
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
       throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
           INVALID_CARD);
+    }
+    if (!card.isActive()) {
+      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
+          INACTIVE_CARD);
     }
     blasPaymentTransactionLog.setCard(card);
     Charge charge;

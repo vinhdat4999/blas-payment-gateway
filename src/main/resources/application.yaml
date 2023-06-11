@@ -6,6 +6,11 @@ spring:
     url: jdbc:mysql://localhost:3306/blas
     username: root
     password:
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
   jpa:
     hibernate:
       ddl-auto: none
@@ -18,6 +23,9 @@ blas:
   gate-interceptor:
     enableLogRequest: true
     enableLogLocalRequest: false
+  blas-support-service:
+    maintenance:
+      endpointCheck: http://localhost:8084/maintenance/check
   blas-idp:
     isSendEmailAlert: true
     jwt:
