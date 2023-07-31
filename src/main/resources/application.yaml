@@ -23,9 +23,9 @@ blas:
   gate-interceptor:
     enableLogRequest: true
     enableLogLocalRequest: false
-  blas-support-service:
-    maintenance:
-      endpointCheck: http://localhost:8084/maintenance/check
+  blas-service-support:
+    throughServiceSupport: true
+    endpointCheckMaintenance: http://localhost:8084/maintenance/check
   blas-idp:
     isSendEmailAlert: true
     jwt:
