@@ -5,11 +5,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.blas</groupId>
-    <artifactId>blas-pom</artifactId>
-    <version>1.7.0</version>
+    <artifactId>blas-bom</artifactId>
+    <version>1.8.0</version>
   </parent>
   <artifactId>blas-payment-gateway</artifactId>
-  <version>1.4.0</version>
+  <version>1.5.0</version>
   <name>blas-payment-gateway</name>
   <description>blas-payment-gateway</description>
   <properties>
@@ -21,7 +21,7 @@
     <dependency>
       <groupId>com.blas</groupId>
       <artifactId>blas-common</artifactId>
-      <version>3.3.0</version>
+      <version>3.4.0</version>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>

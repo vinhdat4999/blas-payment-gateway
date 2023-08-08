@@ -42,8 +42,11 @@ public class BlasPaymentTransactionLog {
   @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_blas_payment_transaction_log_2"))
   private AuthUser authUser;
 
-  @Column(name = "amount", nullable = false)
-  private long amount;
+  @Column(name = "amount_captured", nullable = false)
+  private long amountCaptured;
+
+  @Column(name = "amount_refund", nullable = false)
+  private long amountRefund;
 
 
   @Column(name = "currency", nullable = false)
@@ -61,6 +64,9 @@ public class BlasPaymentTransactionLog {
 
   @Column(name = "card_type", length = 10, nullable = false)
   private String cardType;
+
+  @Column(name = "is_refund")
+  private boolean isRefund;
 
   @Column(name = "log_message_1", nullable = false)
   private String logMessage1;

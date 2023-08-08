@@ -98,7 +98,6 @@ public class ChargeController {
         .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(getUsernameLoggedIn()))
-        .amount(chargeRequest.getAmount())
         .currency(chargeRequest.getCurrency().name())
         .status(TRANSACTION_FAILED)
         .description(chargeRequest.getDescription())
@@ -121,11 +120,13 @@ public class ChargeController {
     try {
       charge = paymentsService.charge(chargeRequest);
       blasPaymentTransactionLog.setStripeTransactionId(charge.getId());
-      blasPaymentTransactionLog.setAmount(charge.getAmountCaptured());
+      blasPaymentTransactionLog.setAmountCaptured(charge.getAmountCaptured());
+      blasPaymentTransactionLog.setAmountRefund(charge.getAmountRefunded());
       blasPaymentTransactionLog.setReceiptUrl(charge.getReceiptUrl());
       blasPaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
       blasPaymentTransactionLog.setCardType(
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());
+      blasPaymentTransactionLog.setRefund(charge.getRefunded());
       new Thread(() -> {
         try {
           sendReceiptEmail(blasPaymentTransactionLog, card, charge);
@@ -186,6 +187,7 @@ public class ChargeController {
   private ChargeResponse buildChargeResponse(String transactionId, Charge charge, String cardId,
       String username)
       throws InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    String currency = charge.getCurrency();
     return ChargeResponse.builder()
         .statusCode(String.valueOf(OK.value()))
         .transactionId(transactionId)
@@ -196,11 +198,15 @@ public class ChargeController {
             cardService.getCardInfoByCardId(cardId, true).getCardNumber())))
         .cardType(charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase())
         .username(username)
-        .amountCaptured(
-            (double) (charge.getAmountCaptured()) / 100 + SPACE + charge.getCurrency()
-                .toUpperCase())
+        .amountCaptured(getReformattedAmount(charge.getAmountCaptured(), currency))
+        .amountRefund(getReformattedAmount(charge.getAmountRefunded(), currency))
         .status(charge.getStatus().toUpperCase())
+        .isRefundTransaction(charge.getRefunded())
         .description(charge.getDescription())
         .build();
+  }
+
+  private static String getReformattedAmount(Long amount, String currency) {
+    return (double) (amount) / 100 + SPACE + currency.toUpperCase();
   }
 }
