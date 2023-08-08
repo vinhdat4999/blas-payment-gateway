@@ -1,11 +1,9 @@
 package com.blas.blaspaymentgateway.controller;
 
 import static com.blas.blascommon.enums.EmailTemplate.PAYMENT_RECEIPT;
-import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
-import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
+import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.utils.StringUtils.SPACE;
-import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_CARD;
-import static com.blas.blaspaymentgateway.constants.PaymentGateway.INVALID_CARD;
+import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_EXISTED_CARD;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_FAILED;
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.buildChargeResponse;
@@ -19,8 +17,8 @@ import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
-import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.ChargeResponse;
+import com.blas.blascommon.payload.GuestChargeRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
@@ -42,13 +40,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
-public class ChargeController {
+public class GuestChargeController {
 
+  public static final String EXISTED_CARD_MESSAGE = "You already added this card to your account before";
   @Value("${blas.blas-idp.isSendEmailAlert}")
   private boolean isSendEmailAlert;
 
@@ -90,35 +90,37 @@ public class ChargeController {
   @Autowired
   private JwtTokenUtil jwtTokenUtil;
 
-  @PostMapping(value = "/charge")
-  public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
+  @PostMapping(value = "/guest-charge")
+  public ResponseEntity<ChargeResponse> guestCharge(
+      @RequestBody GuestChargeRequest guestChargeRequest, Authentication authentication)
+      throws InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    String username = authentication.getName();
     BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
         .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
         .transactionTime(now())
-        .authUser(authUserService.getAuthUserByUsername(getUsernameLoggedIn()))
-        .currency(chargeRequest.getCurrency().name())
+        .authUser(authUserService.getAuthUserByUsername(username))
+        .currency(guestChargeRequest.getCurrency().name())
         .status(TRANSACTION_FAILED)
-        .description(chargeRequest.getDescription())
+        .description(guestChargeRequest.getDescription())
+        .isGuestCard(true)
         .build();
-    String cardId = chargeRequest.getCardId();
-    Card card = cardService.getCardInfoByCardId(cardId, true);
-    if (!getUsernameLoggedIn().equals(card.getAuthUser().getUsername())) {
-      blasPaymentTransactionLog.setLogMessage1(INVALID_CARD);
-      blasPaymentTransactionLog.setCard(card);
-      blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          INVALID_CARD);
-    }
-    if (!card.isActive()) {
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          INACTIVE_CARD);
-    }
-    blasPaymentTransactionLog.setCard(card);
-    Charge charge;
+    String cardNumber = guestChargeRequest.getCardRequest().getCardNumber();
     final String blasSecretKey = keyService.getBlasPrivateKey();
-    String plainTextCardNumber;
+    Card card = cardService.getCardInfoByCardNumber(aesEncrypt(blasSecretKey, cardNumber));
+    if (card != null && card.getAuthUser().getUsername().equals(username)) {
+      if (!card.isActive()) {
+        throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
+            INACTIVE_EXISTED_CARD);
+      }
+      blasPaymentTransactionLog.setCard(card);
+      blasPaymentTransactionLog.setNote(EXISTED_CARD_MESSAGE);
+      blasPaymentTransactionLog.setMaskedCardNumber(maskCardNumber(card.getCardNumber()));
+    } else {
+      blasPaymentTransactionLog.setMaskedCardNumber(maskCardNumber(cardNumber));
+    }
+    Charge charge;
     try {
-      charge = paymentsService.charge(chargeRequest);
+      charge = paymentsService.charge(guestChargeRequest);
       blasPaymentTransactionLog.setStripeTransactionId(charge.getId());
       blasPaymentTransactionLog.setAmountCaptured(charge.getAmountCaptured());
       blasPaymentTransactionLog.setAmountRefund(charge.getAmountRefunded());
@@ -126,13 +128,10 @@ public class ChargeController {
       blasPaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
       blasPaymentTransactionLog.setCardType(
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());
-      plainTextCardNumber = aesDecrypt(blasSecretKey, card.getCardNumber());
-      blasPaymentTransactionLog.setMaskedCardNumber(
-          maskCardNumber(plainTextCardNumber));
       blasPaymentTransactionLog.setRefund(charge.getRefunded());
       new Thread(() -> {
         try {
-          sendReceiptEmail(blasPaymentTransactionLog, card, charge);
+          sendReceiptEmail(blasPaymentTransactionLog, username, cardNumber, charge);
         } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  NoSuchPaddingException | BadPaddingException | NoSuchAlgorithmException |
                  InvalidKeyException exception) {
@@ -140,8 +139,8 @@ public class ChargeController {
         }
       }).start();
       return ResponseEntity.ok(
-          buildChargeResponse(blasPaymentTransactionLog.getPaymentTransactionLogId(), charge,
-              cardId, plainTextCardNumber, false, getUsernameLoggedIn()));
+          buildChargeResponse(blasPaymentTransactionLog.getPaymentTransactionLogId(), charge, null,
+              cardNumber, true, username));
     } catch (StripeException exception) {
       blasPaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
@@ -160,10 +159,10 @@ public class ChargeController {
     }
   }
 
-  private void sendReceiptEmail(BlasPaymentTransactionLog blasPaymentTransaction, Card card,
-      Charge charge)
+  private void sendReceiptEmail(BlasPaymentTransactionLog blasPaymentTransaction, String username,
+      String cardNumber, Charge charge)
       throws InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
-    AuthUser authUser = authUserService.getAuthUserByUserId(card.getAuthUser().getUserId());
+    AuthUser authUser = authUserService.getAuthUserByUsername(username);
     HtmlEmailRequest htmlEmailRequest = new HtmlEmailRequest();
     htmlEmailRequest.setEmailTo(authUser.getUserDetail().getEmail());
     htmlEmailRequest.setTitle(SUBJECT_EMAIL_RECEIPT);
@@ -176,8 +175,7 @@ public class ChargeController {
         Map.entry("transactionId", blasPaymentTransaction.getPaymentTransactionLogId()),
         Map.entry("transactionTime", blasPaymentTransaction.getTransactionTime().toString()),
         Map.entry("cardType", blasPaymentTransaction.getCardType()),
-        Map.entry("cardNumber", maskCardNumber(aesDecrypt(keyService.getBlasPrivateKey(),
-            cardService.getCardInfoByCardId(card.getCardId(), true).getCardNumber()))),
+        Map.entry("cardNumber", maskCardNumber(cardNumber)),
         Map.entry("status", charge.getStatus().toUpperCase()),
         Map.entry("description", charge.getDescription()),
         Map.entry("amount", String.valueOf((double) (charge.getAmountCaptured()) / 100)),
