@@ -3,6 +3,7 @@ package com.blas.blaspaymentgateway.controller;
 import static com.blas.blascommon.enums.EmailTemplate.PAYMENT_RECEIPT;
 import static com.blas.blascommon.utils.IdUtils.genMixID;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
+import static com.blas.blaspaymentgateway.controller.CardController.sendEmail;
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.http.HttpStatus.OK;
@@ -133,7 +134,7 @@ public class ChargeController {
         Map.entry("amount", String.valueOf((double) (charge.getAmountCaptured()) / 100)),
         Map.entry("currency", charge.getCurrency().toUpperCase())
     ));
-    CardController.sendEmail(htmlEmailRequest, blasEmailConfiguration, jwtTokenUtil,
-        centralizedLogService, serviceName, isSendEmailAlert);
+    sendEmail(htmlEmailRequest, blasEmailConfiguration, jwtTokenUtil, centralizedLogService,
+        serviceName, isSendEmailAlert);
   }
 }
