@@ -10,6 +10,7 @@ public class PaymentGateway {
   public static final String CARD_EXISTED = "This card was already added before";
   public static final String INVALID_CARD = "INVALID CARD";
   public static final String INACTIVE_CARD = "INACTIVE CARD";
+  public static final String INACTIVE_EXISTED_CARD = "YOU ALREADY ADDED THIS CARD TO YOUR ACCOUNT BEFORE. CURRENT CARD STATUS: INACTIVE";
   public static final String TRANSACTION_FAILED = "FAILED";
   public static final String CARD_ADDED_SUCCESSFULLY = "Card successfully added";
   public static final String SUBJECT_EMAIL_RECEIPT = "[BLAS] BLAS PAYMENT RECEIPT";

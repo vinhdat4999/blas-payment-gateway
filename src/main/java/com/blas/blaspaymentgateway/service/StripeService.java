@@ -4,7 +4,9 @@ import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.STRIPE_PRIVATE_KEY;
 
 import com.blas.blascommon.core.service.BlasConfigService;
+import com.blas.blascommon.payload.CardRequest;
 import com.blas.blascommon.payload.ChargeRequest;
+import com.blas.blascommon.payload.GuestChargeRequest;
 import com.blas.blaspaymentgateway.model.Card;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -51,12 +53,30 @@ public class StripeService {
 
   public Charge charge(final ChargeRequest chargeRequest)
       throws StripeException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
-    Card card = cardService.getCardInfoByCardId(chargeRequest.getCardId(), true);
+    final Card card = cardService.getCardInfoByCardId(chargeRequest.getCardId(), true);
     final Map<String, Object> chargeParams = Map.ofEntries(
         Map.entry("amount", chargeRequest.getAmount()),
         Map.entry("currency", chargeRequest.getCurrency()),
         Map.entry("description", chargeRequest.getDescription()),
         Map.entry("source", stripeService.getStripeTransactionToken(card).getId()));
+    return Charge.create(chargeParams);
+  }
+
+  public Charge charge(final GuestChargeRequest guestChargeRequest)
+      throws StripeException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    final CardRequest cardRequest = guestChargeRequest.getCardRequest();
+    final Card card = Card.builder()
+        .cardNumber(cardRequest.getCardNumber())
+        .cardHolder(cardRequest.getCardHolder())
+        .expMonth(cardRequest.getExpMonth())
+        .expYear(cardRequest.getExpYear())
+        .cvc(cardRequest.getCvc())
+        .build();
+    final Map<String, Object> chargeParams = Map.ofEntries(
+        Map.entry("amount", guestChargeRequest.getAmount()),
+        Map.entry("currency", guestChargeRequest.getCurrency()),
+        Map.entry("description", guestChargeRequest.getDescription()),
+        Map.entry("source", stripeService.getStripeTransactionTokenWithRawCardInfo(card).getId()));
     return Charge.create(chargeParams);
   }
 
@@ -79,7 +99,7 @@ public class StripeService {
         Map.entry("exp_month", Integer.parseInt(card.getExpMonth())),
         Map.entry("exp_year", Integer.parseInt(card.getExpYear())),
         Map.entry("cvc", card.getCvc()));
-    Map<String, Object> params = Map.of("card", cardMap);
+    final Map<String, Object> params = Map.of("card", cardMap);
     return Token.create(params);
   }
 }
