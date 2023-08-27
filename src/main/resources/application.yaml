@@ -6,15 +6,16 @@ spring:
     url: jdbc:mysql://localhost:3306/blas
     username: root
     password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    show-sql: false
 management:
   endpoints:
     web:
       exposure:
         include: "*"
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
 blas:
   aliasBlasPrivateKey: blasSecretKey
   certificate: BlasSecretKey.p12

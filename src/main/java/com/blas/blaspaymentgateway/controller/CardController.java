@@ -4,6 +4,7 @@ import static com.blas.blascommon.constants.Response.CANNOT_CONNECT_TO_HOST;
 import static com.blas.blascommon.constants.Response.HTTP_STATUS_NOT_200;
 import static com.blas.blascommon.enums.EmailTemplate.ADD_CARD_SUCCESS;
 import static com.blas.blascommon.enums.LogType.ERROR;
+import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.utils.httprequest.PostRequest.sendPostRequestWithJsonArrayPayload;
@@ -40,10 +41,10 @@ import java.util.Map;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -53,42 +54,40 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class CardController {
 
+  @Lazy
+  private final AuthUserService authUserService;
+  @Lazy
+  private final StripeService stripeService;
+  @Lazy
+  private final CardService cardService;
+  @Lazy
+  private final KeyService keyService;
+  @Lazy
+  private final BlasEmailConfiguration blasEmailConfiguration;
+  @Lazy
+  private final CentralizedLogService centralizedLogService;
+  @Lazy
+  private final JwtTokenUtil jwtTokenUtil;
   @Value("${blas.blas-idp.isSendEmailAlert}")
   private boolean isSendEmailAlert;
-
   @Value("${blas.service.serviceName}")
   private String serviceName;
 
-  @Lazy
-  @Autowired
-  private AuthUserService authUserService;
-
-  @Lazy
-  @Autowired
-  private StripeService stripeService;
-
-  @Lazy
-  @Autowired
-  private CardService cardService;
-
-  @Lazy
-  @Autowired
-  private KeyService keyService;
-
-  @Lazy
-  @Autowired
-  private BlasEmailConfiguration blasEmailConfiguration;
-
-  @Lazy
-  @Autowired
-  private CentralizedLogService centralizedLogService;
-
-  @Lazy
-  @Autowired
-  private JwtTokenUtil jwtTokenUtil;
+  public CardController(AuthUserService authUserService, StripeService stripeService,
+      CardService cardService, KeyService keyService, BlasEmailConfiguration blasEmailConfiguration,
+      CentralizedLogService centralizedLogService, JwtTokenUtil jwtTokenUtil) {
+    this.authUserService = authUserService;
+    this.stripeService = stripeService;
+    this.cardService = cardService;
+    this.keyService = keyService;
+    this.blasEmailConfiguration = blasEmailConfiguration;
+    this.centralizedLogService = centralizedLogService;
+    this.jwtTokenUtil = jwtTokenUtil;
+  }
 
   static void sendEmail(HtmlEmailRequest htmlEmailRequest,
       BlasEmailConfiguration blasEmailConfiguration, JwtTokenUtil jwtTokenUtil,
@@ -97,6 +96,7 @@ public class CardController {
       HttpResponse response = sendPostRequestWithJsonArrayPayload(
           blasEmailConfiguration.getEndpointHtmlEmail(), null,
           jwtTokenUtil.generateInternalSystemToken(), new JSONArray(List.of(htmlEmailRequest)));
+      log.info("Sent to customer's email.");
       if (response.getStatusCode() != HttpStatus.OK.value()) {
         throw new BadRequestException(HTTP_STATUS_NOT_200);
       }
@@ -105,6 +105,7 @@ public class CardController {
           e.getCause() == null ? EMPTY : e.getCause().toString(),
           new JSONArray(List.of(htmlEmailRequest)).toString(), null, null,
           String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
+      log.error(CANNOT_CONNECT_TO_HOST + " blas-email unavailable.");
       throw new ServiceUnavailableException(CANNOT_CONNECT_TO_HOST);
     }
   }
@@ -146,18 +147,20 @@ public class CardController {
       String cardId = cardService.addNewCard(card);
       new Thread(() -> sendEmailAddCardSuccessfully(card.getAuthUser().getUserDetail().getEmail(),
           maskCardNumber(rawCardNumber), token.getCard().getBrand().toUpperCase())).start();
-      return ResponseEntity.ok(CardResponse.builder()
+      CardResponse response = CardResponse.builder()
           .statusCode(String.valueOf(OK.value()))
           .cardId(cardId)
           .maskedCardNumber(maskCardNumber(rawCardNumber))
           .cardType(token.getCard().getBrand().toUpperCase())
           .addedTime(now())
           .message(CARD_ADDED_SUCCESSFULLY)
-          .build());
+          .build();
+      log.info("New card added. " + response.toString());
+      return ResponseEntity.ok(response);
     } catch (IllegalBlockSizeException | BadPaddingException |
              InvalidAlgorithmParameterException | InvalidKeyException |
              NoSuchPaddingException | NoSuchAlgorithmException exception) {
-      throw new BadRequestException(exception);
+      throw new BadRequestException(MSG_BLAS_APP_FAILURE);
     }
   }
 

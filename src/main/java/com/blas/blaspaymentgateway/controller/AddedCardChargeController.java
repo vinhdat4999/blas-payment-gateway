@@ -1,5 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
+import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_CARD;
@@ -8,12 +9,20 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_F
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
 
+import com.blas.blascommon.core.service.AuthUserService;
+import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.PaymentException;
+import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.ChargeResponse;
+import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.model.Card;
+import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
+import com.blas.blaspaymentgateway.service.CardService;
+import com.blas.blaspaymentgateway.service.KeyService;
+import com.blas.blaspaymentgateway.service.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import java.security.InvalidAlgorithmParameterException;
@@ -22,16 +31,32 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class AddedCardChargeController extends ChargeController {
 
+  public AddedCardChargeController(AuthUserService authUserService,
+      StripeService stripeService,
+      CardService cardService,
+      KeyService keyService,
+      BlasEmailConfiguration blasEmailConfiguration,
+      CentralizedLogService centralizedLogService,
+      JwtTokenUtil jwtTokenUtil,
+      StripeService paymentsService,
+      BlasPaymentTransactionLogService blasPaymentTransactionLogService) {
+    super(authUserService, stripeService, cardService, keyService, blasEmailConfiguration,
+        centralizedLogService, jwtTokenUtil, paymentsService, blasPaymentTransactionLogService);
+  }
+
   @PostMapping(value = "/charge")
   public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
+    log.debug("Start transaction...");
     String username = getUsernameLoggedIn();
     BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
         .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
@@ -41,6 +66,8 @@ public class AddedCardChargeController extends ChargeController {
         .status(TRANSACTION_FAILED)
         .description(chargeRequest.getDescription())
         .build();
+    log.info(
+        "blasPaymentTransactionLogId: " + blasPaymentTransactionLog.getPaymentTransactionLogId());
     String cardId = chargeRequest.getCardId();
     Card card = cardService.getCardInfoByCardId(cardId, true);
     if (!username.equals(card.getAuthUser().getUsername())) {
@@ -79,12 +106,15 @@ public class AddedCardChargeController extends ChargeController {
         } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  NoSuchPaddingException | BadPaddingException | NoSuchAlgorithmException |
                  InvalidKeyException exception) {
-          throw new BadRequestException(exception);
+          throw new BadRequestException(MSG_BLAS_APP_FAILURE);
         }
       }).start();
-      return ResponseEntity.ok(
-          buildChargeResponse(blasPaymentTransactionLog.getPaymentTransactionLogId(), charge,
-              cardId, plainTextCardNumber, false, username));
+      ChargeResponse response = buildChargeResponse(
+          blasPaymentTransactionLog.getPaymentTransactionLogId(), charge, cardId,
+          plainTextCardNumber, false, username);
+      log.info(response.toString());
+      log.debug("Complete transaction");
+      return ResponseEntity.ok(response);
     } catch (StripeException exception) {
       blasPaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
@@ -99,6 +129,7 @@ public class AddedCardChargeController extends ChargeController {
       throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getMessage());
     } finally {
+      log.debug("Complete transaction");
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
     }
   }

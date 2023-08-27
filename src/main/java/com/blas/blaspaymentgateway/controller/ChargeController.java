@@ -25,58 +25,55 @@ import com.stripe.model.Charge;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class ChargeController {
 
+  @Lazy
+  protected final AuthUserService authUserService;
+  @Lazy
+  protected final StripeService stripeService;
+  @Lazy
+  protected final CardService cardService;
+  @Lazy
+  protected final KeyService keyService;
+  @Lazy
+  protected final BlasEmailConfiguration blasEmailConfiguration;
+  @Lazy
+  protected final CentralizedLogService centralizedLogService;
+  @Lazy
+  protected final JwtTokenUtil jwtTokenUtil;
+  @Lazy
+  protected final StripeService paymentsService;
+  @Lazy
+  protected final BlasPaymentTransactionLogService blasPaymentTransactionLogService;
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
-
   @Value("${blas.service.serviceName}")
   protected String serviceName;
-
-  @Lazy
-  @Autowired
-  protected AuthUserService authUserService;
-
-  @Lazy
-  @Autowired
-  protected StripeService stripeService;
-
-  @Lazy
-  @Autowired
-  protected CardService cardService;
-
-  @Lazy
-  @Autowired
-  protected KeyService keyService;
-
-  @Lazy
-  @Autowired
-  protected BlasEmailConfiguration blasEmailConfiguration;
-
-  @Lazy
-  @Autowired
-  protected CentralizedLogService centralizedLogService;
-
-  @Lazy
-  @Autowired
-  protected JwtTokenUtil jwtTokenUtil;
-
   @Value("${blas.blas-payment-gateway.lengthOfId}")
   protected int lengthOfId;
 
-  @Lazy
-  @Autowired
-  protected StripeService paymentsService;
-
-  @Lazy
-  @Autowired
-  protected BlasPaymentTransactionLogService blasPaymentTransactionLogService;
+  public ChargeController(AuthUserService authUserService, StripeService stripeService,
+      CardService cardService, KeyService keyService, BlasEmailConfiguration blasEmailConfiguration,
+      CentralizedLogService centralizedLogService, JwtTokenUtil jwtTokenUtil,
+      StripeService paymentsService,
+      BlasPaymentTransactionLogService blasPaymentTransactionLogService) {
+    this.authUserService = authUserService;
+    this.stripeService = stripeService;
+    this.cardService = cardService;
+    this.keyService = keyService;
+    this.blasEmailConfiguration = blasEmailConfiguration;
+    this.centralizedLogService = centralizedLogService;
+    this.jwtTokenUtil = jwtTokenUtil;
+    this.paymentsService = paymentsService;
+    this.blasPaymentTransactionLogService = blasPaymentTransactionLogService;
+  }
 
   protected static String genTransactionId(
       BlasPaymentTransactionLogService blasPaymentTransactionLogService, int lengthOfId) {
