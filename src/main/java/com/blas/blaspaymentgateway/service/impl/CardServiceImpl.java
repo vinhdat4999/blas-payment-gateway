@@ -1,11 +1,11 @@
 package com.blas.blaspaymentgateway.service.impl;
 
-import static com.blas.blascommon.constants.Response.USER_ID_NOT_FOUND;
+import static com.blas.blascommon.constants.ResponseMessage.USER_ID_NOT_FOUND;
 import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ID_NOT_FOUND;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INVALID_CARD;
 
-import com.blas.blascommon.core.dao.AuthUserDao;
+import com.blas.blascommon.core.dao.jpa.AuthUserDao;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.NotFoundException;
 import com.blas.blaspaymentgateway.dao.CardDao;

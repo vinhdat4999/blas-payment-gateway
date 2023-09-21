@@ -1,6 +1,6 @@
 package com.blas.blaspaymentgateway.service;
 
-import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_BLAS_APP_FAILURE;
+import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.getPrivateKeyAesFromCertificate;
 
 import com.blas.blascommon.exceptions.types.BadRequestException;

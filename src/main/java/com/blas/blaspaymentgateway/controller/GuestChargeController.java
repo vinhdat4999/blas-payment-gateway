@@ -8,6 +8,7 @@ import static java.time.LocalDateTime.now;
 
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.exceptions.BlasErrorCodeEnum;
 import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeResponse;
@@ -75,8 +76,8 @@ public class GuestChargeController extends ChargeController {
     Card card = cardService.getCardInfoByCardNumber(aesEncrypt(blasSecretKey, cardNumber));
     if (card != null && card.getAuthUser().getUsername().equals(username)) {
       if (!card.isActive()) {
-        throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-            INACTIVE_EXISTED_CARD);
+        throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+            blasPaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_EXISTED_CARD);
       }
       blasPaymentTransactionLog.setCard(card);
       blasPaymentTransactionLog.setNote(EXISTED_CARD_MESSAGE);
@@ -108,14 +109,15 @@ public class GuestChargeController extends ChargeController {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
       blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
+      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+          blasPaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage());
     } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          exception.getMessage());
+      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+          blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage());
     } finally {
       log.debug("Complete transaction");
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
