@@ -1,10 +1,10 @@
 package com.blas.blaspaymentgateway.controller;
 
-import static com.blas.blascommon.constants.Response.CANNOT_CONNECT_TO_HOST;
-import static com.blas.blascommon.constants.Response.HTTP_STATUS_NOT_200;
+import static com.blas.blascommon.constants.ResponseMessage.CANNOT_CONNECT_TO_HOST;
+import static com.blas.blascommon.constants.ResponseMessage.HTTP_STATUS_NOT_200;
 import static com.blas.blascommon.enums.EmailTemplate.ADD_CARD_SUCCESS;
 import static com.blas.blascommon.enums.LogType.ERROR;
-import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_BLAS_APP_FAILURE;
+import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.utils.httprequest.PostRequest.sendPostRequestWithJsonArrayPayload;
@@ -96,10 +96,10 @@ public class CardController {
       HttpResponse response = sendPostRequestWithJsonArrayPayload(
           blasEmailConfiguration.getEndpointHtmlEmail(), null,
           jwtTokenUtil.generateInternalSystemToken(), new JSONArray(List.of(htmlEmailRequest)));
-      log.info("Sent to customer's email.");
       if (response.getStatusCode() != HttpStatus.OK.value()) {
         throw new BadRequestException(HTTP_STATUS_NOT_200);
       }
+      log.info("Sent to customer's email.");
     } catch (IOException | JSONException | BadRequestException e) {
       centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
           e.getCause() == null ? EMPTY : e.getCause().toString(),

@@ -1,6 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
-import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_BLAS_APP_FAILURE;
+import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_CARD;
@@ -11,6 +11,7 @@ import static java.time.LocalDateTime.now;
 
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.exceptions.BlasErrorCodeEnum;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
@@ -74,12 +75,12 @@ public class AddedCardChargeController extends ChargeController {
       blasPaymentTransactionLog.setLogMessage1(INVALID_CARD);
       blasPaymentTransactionLog.setCard(card);
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          INVALID_CARD);
+      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+          blasPaymentTransactionLog.getPaymentTransactionLogId(), INVALID_CARD);
     }
     if (!card.isActive()) {
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          INACTIVE_CARD);
+      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+          blasPaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_CARD);
     }
     blasPaymentTransactionLog.setCard(card);
     Charge charge;
@@ -120,14 +121,15 @@ public class AddedCardChargeController extends ChargeController {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
       blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
+      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+          blasPaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage());
     } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
-      throw new PaymentException(blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          exception.getMessage());
+      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+          blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage());
     } finally {
       log.debug("Complete transaction");
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
