@@ -35,7 +35,10 @@ import com.stripe.model.Token;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Map;
 import javax.crypto.BadPaddingException;
@@ -100,7 +103,11 @@ public class CardController {
         throw new BadRequestException(HTTP_STATUS_NOT_200);
       }
       log.info("Sent to customer's email.");
-    } catch (IOException | JSONException | BadRequestException e) {
+    } catch (IOException | JSONException | BadRequestException |
+             InvalidAlgorithmParameterException | UnrecoverableKeyException |
+             IllegalBlockSizeException | NoSuchPaddingException | CertificateException |
+             KeyStoreException | NoSuchAlgorithmException | BadPaddingException |
+             InvalidKeyException e) {
       centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
           e.getCause() == null ? EMPTY : e.getCause().toString(),
           new JSONArray(List.of(htmlEmailRequest)).toString(), null, null,
