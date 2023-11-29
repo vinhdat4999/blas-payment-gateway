@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 1.9.0   | 30/11/2023   | Upgrade spring boot 3.2.0                                              |
 | 1.8.0   | 22/09/2023   | Support VNPay                                                          |
 | 1.7.0   | 22/09/2023   | Uptake blas-common 4.1.0                                               |
 | 1.6.0   | 27/08/2023   | Refactor log                                                           |
