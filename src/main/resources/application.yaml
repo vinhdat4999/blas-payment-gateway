@@ -43,6 +43,6 @@ blas:
 #  file:
 #    name: application.log
 #  level:
-#    root: WARN
+#    root: DEBUG
 #    org.springframework: WARN
-#    com.blas: INFO
+#    com.blas: DEBUG

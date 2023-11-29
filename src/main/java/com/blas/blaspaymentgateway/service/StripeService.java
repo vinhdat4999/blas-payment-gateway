@@ -7,6 +7,7 @@ import com.blas.blascommon.core.service.BlasConfigService;
 import com.blas.blascommon.payload.CardRequest;
 import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.GuestChargeRequest;
+import com.blas.blascommon.security.KeyService;
 import com.blas.blaspaymentgateway.model.Card;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -20,28 +21,22 @@ import java.util.Map;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class StripeService {
 
   @Lazy
-  @Autowired
-  private KeyService keyService;
+  private final KeyService keyService;
 
   @Lazy
-  @Autowired
-  private BlasConfigService blasConfigService;
+  private final BlasConfigService blasConfigService;
 
   @Lazy
-  @Autowired
-  private StripeService stripeService;
-
-  @Lazy
-  @Autowired
-  private CardService cardService;
+  private final CardService cardService;
 
   @PostConstruct
   public void init()
@@ -58,7 +53,7 @@ public class StripeService {
         Map.entry("amount", chargeRequest.getAmount()),
         Map.entry("currency", chargeRequest.getCurrency()),
         Map.entry("description", chargeRequest.getDescription()),
-        Map.entry("source", stripeService.getStripeTransactionToken(card).getId()));
+        Map.entry("source", this.getStripeTransactionToken(card).getId()));
     return Charge.create(chargeParams);
   }
 
@@ -76,7 +71,7 @@ public class StripeService {
         Map.entry("amount", guestChargeRequest.getAmount()),
         Map.entry("currency", guestChargeRequest.getCurrency()),
         Map.entry("description", guestChargeRequest.getDescription()),
-        Map.entry("source", stripeService.getStripeTransactionTokenWithRawCardInfo(card).getId()));
+        Map.entry("source", this.getStripeTransactionTokenWithRawCardInfo(card).getId()));
     return Charge.create(chargeParams);
   }
 

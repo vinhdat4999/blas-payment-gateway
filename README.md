@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 1.8.0   | 22/09/2023   | Support VNPay                                                          |
 | 1.7.0   | 22/09/2023   | Uptake blas-common 4.1.0                                               |
 | 1.6.0   | 27/08/2023   | Refactor log                                                           |
 | 1.5.0   | 16/08/2023   | Support guest card payment                                             |
