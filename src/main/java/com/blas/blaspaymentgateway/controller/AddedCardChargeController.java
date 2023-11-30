@@ -19,6 +19,7 @@ import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.ChargeResponse;
 import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blascommon.security.KeyService;
+import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
@@ -42,17 +43,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AddedCardChargeController extends ChargeController {
 
-  public AddedCardChargeController(AuthUserService authUserService,
-      StripeService stripeService,
-      CardService cardService,
-      KeyService keyService,
-      BlasEmailConfiguration blasEmailConfiguration,
-      CentralizedLogService centralizedLogService,
-      JwtTokenUtil jwtTokenUtil,
+  public AddedCardChargeController(AuthUserService authUserService, StripeService stripeService,
+      CardService cardService, KeyService keyService, BlasEmailConfiguration blasEmailConfiguration,
+      CentralizedLogService centralizedLogService, JwtTokenUtil jwtTokenUtil,
       StripeService paymentsService,
-      BlasPaymentTransactionLogService blasPaymentTransactionLogService) {
+      BlasPaymentTransactionLogService blasPaymentTransactionLogService,
+      EmailQueueService emailQueueService) {
     super(authUserService, stripeService, cardService, keyService, blasEmailConfiguration,
-        centralizedLogService, jwtTokenUtil, paymentsService, blasPaymentTransactionLogService);
+        centralizedLogService, jwtTokenUtil, paymentsService, blasPaymentTransactionLogService,
+        emailQueueService);
   }
 
   @PostMapping(value = "/charge")
@@ -107,7 +106,7 @@ public class AddedCardChargeController extends ChargeController {
         } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  NoSuchPaddingException | BadPaddingException | NoSuchAlgorithmException |
                  InvalidKeyException exception) {
-          throw new BadRequestException(MSG_BLAS_APP_FAILURE);
+          throw new BadRequestException(MSG_BLAS_APP_FAILURE, exception);
         }
       }).start();
       ChargeResponse response = buildChargeResponse(
@@ -123,13 +122,14 @@ public class AddedCardChargeController extends ChargeController {
       blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
       throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
           blasPaymentTransactionLog.getPaymentTransactionLogId(),
-          exception.getStripeError().getMessage());
+          exception.getStripeError().getMessage(), exception);
     } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
       throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage());
+          blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage(),
+          exception);
     } finally {
       log.debug("Complete transaction");
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);

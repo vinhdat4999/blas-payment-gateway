@@ -3,7 +3,6 @@ package com.blas.blaspaymentgateway.controller;
 import static com.blas.blascommon.enums.EmailTemplate.PAYMENT_RECEIPT;
 import static com.blas.blascommon.utils.IdUtils.genMixID;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
-import static com.blas.blaspaymentgateway.controller.CardController.sendEmail;
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.http.HttpStatus.OK;
@@ -17,6 +16,7 @@ import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blascommon.utils.StringUtils;
+import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
 import com.blas.blaspaymentgateway.service.CardService;
@@ -24,14 +24,18 @@ import com.blas.blaspaymentgateway.service.StripeService;
 import com.stripe.model.Charge;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class ChargeController {
 
   @Lazy
@@ -52,28 +56,14 @@ public class ChargeController {
   protected final StripeService paymentsService;
   @Lazy
   protected final BlasPaymentTransactionLogService blasPaymentTransactionLogService;
+  @Lazy
+  private final EmailQueueService emailQueueService;
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
   @Value("${blas.service.serviceName}")
   protected String serviceName;
   @Value("${blas.blas-payment-gateway.lengthOfId}")
   protected int lengthOfId;
-
-  public ChargeController(AuthUserService authUserService, StripeService stripeService,
-      CardService cardService, KeyService keyService, BlasEmailConfiguration blasEmailConfiguration,
-      CentralizedLogService centralizedLogService, JwtTokenUtil jwtTokenUtil,
-      StripeService paymentsService,
-      BlasPaymentTransactionLogService blasPaymentTransactionLogService) {
-    this.authUserService = authUserService;
-    this.stripeService = stripeService;
-    this.cardService = cardService;
-    this.keyService = keyService;
-    this.blasEmailConfiguration = blasEmailConfiguration;
-    this.centralizedLogService = centralizedLogService;
-    this.jwtTokenUtil = jwtTokenUtil;
-    this.paymentsService = paymentsService;
-    this.blasPaymentTransactionLogService = blasPaymentTransactionLogService;
-  }
 
   protected static String genTransactionId(
       BlasPaymentTransactionLogService blasPaymentTransactionLogService, int lengthOfId) {
@@ -131,7 +121,6 @@ public class ChargeController {
         Map.entry("amount", String.valueOf((double) (charge.getAmountCaptured()) / 100)),
         Map.entry("currency", charge.getCurrency().toUpperCase())
     ));
-    sendEmail(htmlEmailRequest, blasEmailConfiguration, jwtTokenUtil, centralizedLogService,
-        serviceName, isSendEmailAlert);
+    emailQueueService.sendMessage(new JSONArray(List.of(htmlEmailRequest)).toString());
   }
 }
