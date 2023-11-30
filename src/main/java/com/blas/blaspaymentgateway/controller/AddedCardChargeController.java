@@ -17,7 +17,6 @@ import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.ChargeResponse;
-import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
@@ -44,14 +43,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AddedCardChargeController extends ChargeController {
 
   public AddedCardChargeController(AuthUserService authUserService, StripeService stripeService,
-      CardService cardService, KeyService keyService, BlasEmailConfiguration blasEmailConfiguration,
-      CentralizedLogService centralizedLogService, JwtTokenUtil jwtTokenUtil,
-      StripeService paymentsService,
+      CardService cardService, KeyService keyService, CentralizedLogService centralizedLogService,
+      JwtTokenUtil jwtTokenUtil, StripeService paymentsService,
       BlasPaymentTransactionLogService blasPaymentTransactionLogService,
       EmailQueueService emailQueueService) {
-    super(authUserService, stripeService, cardService, keyService, blasEmailConfiguration,
-        centralizedLogService, jwtTokenUtil, paymentsService, blasPaymentTransactionLogService,
-        emailQueueService);
+    super(authUserService, stripeService, cardService, keyService, centralizedLogService,
+        jwtTokenUtil, paymentsService, blasPaymentTransactionLogService, emailQueueService);
   }
 
   @PostMapping(value = "/charge")

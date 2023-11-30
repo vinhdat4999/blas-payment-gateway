@@ -13,7 +13,6 @@ import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
-import com.blas.blascommon.properties.BlasEmailConfiguration;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blascommon.utils.StringUtils;
 import com.blas.blaspaymentgateway.configuration.EmailQueueService;
@@ -46,8 +45,6 @@ public class ChargeController {
   protected final CardService cardService;
   @Lazy
   protected final KeyService keyService;
-  @Lazy
-  protected final BlasEmailConfiguration blasEmailConfiguration;
   @Lazy
   protected final CentralizedLogService centralizedLogService;
   @Lazy
