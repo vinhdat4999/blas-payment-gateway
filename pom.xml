@@ -68,7 +68,7 @@
     <repository>
       <id>github</id>
       <name>GitHub Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/vinhdat4999/blas-grow</url>
+      <url>https://maven.pkg.github.com/vinhdat4999/blas-payment-gateway</url>
     </repository>
   </distributionManagement>
   <build>
