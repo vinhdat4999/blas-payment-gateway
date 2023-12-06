@@ -1,6 +1,7 @@
 package com.blas.blaspaymentgateway.controller;
 
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
+import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_CARD;
@@ -9,16 +10,15 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_F
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
 
+import com.blas.blascommon.configurations.EmailQueueService;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
-import com.blas.blascommon.exceptions.BlasErrorCodeEnum;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeRequest;
 import com.blas.blascommon.payload.ChargeResponse;
 import com.blas.blascommon.security.KeyService;
-import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
@@ -71,11 +71,11 @@ public class AddedCardChargeController extends ChargeController {
       blasPaymentTransactionLog.setLogMessage1(INVALID_CARD);
       blasPaymentTransactionLog.setCard(card);
       blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
-      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+      throw new PaymentException(MSG_FAILURE,
           blasPaymentTransactionLog.getPaymentTransactionLogId(), INVALID_CARD);
     }
     if (!card.isActive()) {
-      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+      throw new PaymentException(MSG_FAILURE,
           blasPaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_CARD);
     }
     blasPaymentTransactionLog.setCard(card);
@@ -117,14 +117,14 @@ public class AddedCardChargeController extends ChargeController {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
       blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
-      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+      throw new PaymentException(MSG_FAILURE,
           blasPaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage(), exception);
     } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
       blasPaymentTransactionLog.setLogMessage1(exception.toString());
       blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
-      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
+      throw new PaymentException(MSG_FAILURE,
           blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage(),
           exception);
     } finally {

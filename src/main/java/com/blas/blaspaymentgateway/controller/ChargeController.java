@@ -7,6 +7,7 @@ import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.http.HttpStatus.OK;
 
+import com.blas.blascommon.configurations.EmailQueueService;
 import com.blas.blascommon.core.model.AuthUser;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
@@ -15,7 +16,6 @@ import com.blas.blascommon.payload.ChargeResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blascommon.utils.StringUtils;
-import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
 import com.blas.blaspaymentgateway.service.CardService;
