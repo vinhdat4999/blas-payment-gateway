@@ -6,6 +6,7 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_F
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
 
+import com.blas.blascommon.configurations.EmailQueueService;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.exceptions.BlasErrorCodeEnum;
@@ -14,7 +15,6 @@ import com.blas.blascommon.jwt.JwtTokenUtil;
 import com.blas.blascommon.payload.ChargeResponse;
 import com.blas.blascommon.payload.GuestChargeRequest;
 import com.blas.blascommon.security.KeyService;
-import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;

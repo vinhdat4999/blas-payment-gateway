@@ -11,13 +11,13 @@ import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
 import static java.time.LocalDateTime.now;
 import static org.springframework.http.HttpStatus.OK;
 
+import com.blas.blascommon.configurations.EmailQueueService;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.CardRequest;
 import com.blas.blascommon.payload.CardResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.security.KeyService;
-import com.blas.blaspaymentgateway.configuration.EmailQueueService;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.CardService;
 import com.blas.blaspaymentgateway.service.StripeService;
