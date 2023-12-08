@@ -41,7 +41,7 @@ public class WebSecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http, JwtRequestFilter jwtRequestFilter,
       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(authorize -> authorize.requestMatchers("/auth/**")
+        .authorizeHttpRequests(authorize -> authorize.requestMatchers("/auth/**", "/actuator/**")
             .permitAll()
             .anyRequest()
             .hasAnyRole("ADMIN", "BOD", "MAINTAINER", "MANAGER", "USER"));
