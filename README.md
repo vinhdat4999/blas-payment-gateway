@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 1.11.0  | 08/12/2023   | Support Micrometer Prometheus metrics                                  |
 | 1.10.0  | 06/12/2023   | Support Github Packages Maven Repository                               |
 | 1.9.0   | 01/12/2023   | Upgrade spring boot 3.2.0                                              |
 | 1.8.0   | 22/09/2023   | Support VNPay                                                          |

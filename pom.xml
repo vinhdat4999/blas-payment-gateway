@@ -6,10 +6,10 @@
   <parent>
     <groupId>com.blas</groupId>
     <artifactId>blas-bom</artifactId>
-    <version>1.12.0</version>
+    <version>1.13.0</version>
   </parent>
   <artifactId>blas-payment-gateway</artifactId>
-  <version>1.10.0</version>
+  <version>1.11.0</version>
   <name>blas-payment-gateway</name>
   <description>blas-payment-gateway</description>
   <properties>
