@@ -16,14 +16,14 @@ import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
-import com.blas.blascommon.payload.ChargeRequest;
-import com.blas.blascommon.payload.ChargeResponse;
+import com.blas.blascommon.payload.payment.ChargeResponse;
+import com.blas.blascommon.payload.payment.StripeChargeRequest;
 import com.blas.blascommon.security.KeyService;
-import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.model.Card;
-import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
+import com.blas.blaspaymentgateway.model.StripePaymentTransactionLog;
 import com.blas.blaspaymentgateway.service.CardService;
-import com.blas.blaspaymentgateway.service.StripeService;
+import com.blas.blaspaymentgateway.service.StripePaymentTransactionLogService;
+import com.blas.blaspaymentgateway.service.merchants.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import java.security.InvalidAlgorithmParameterException;
@@ -45,18 +45,18 @@ public class AddedCardChargeController extends ChargeController {
   public AddedCardChargeController(AuthUserService authUserService, StripeService stripeService,
       CardService cardService, KeyService keyService, CentralizedLogService centralizedLogService,
       JwtTokenUtil jwtTokenUtil, StripeService paymentsService,
-      BlasPaymentTransactionLogService blasPaymentTransactionLogService,
+      StripePaymentTransactionLogService stripePaymentTransactionLogService,
       EmailQueueService emailQueueService) {
     super(authUserService, stripeService, cardService, keyService, centralizedLogService,
-        jwtTokenUtil, paymentsService, blasPaymentTransactionLogService, emailQueueService);
+        jwtTokenUtil, paymentsService, stripePaymentTransactionLogService, emailQueueService);
   }
 
   @PostMapping(value = "/charge")
-  public ResponseEntity<ChargeResponse> charge(@RequestBody ChargeRequest chargeRequest) {
+  public ResponseEntity<ChargeResponse> charge(@RequestBody StripeChargeRequest chargeRequest) {
     log.debug("Start transaction...");
     String username = getUsernameLoggedIn();
-    BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
-        .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
+    StripePaymentTransactionLog stripePaymentTransactionLog = StripePaymentTransactionLog.builder()
+        .paymentTransactionLogId(genTransactionId(stripePaymentTransactionLogService, lengthOfId))
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(username))
         .currency(chargeRequest.getCurrency().name())
@@ -64,42 +64,43 @@ public class AddedCardChargeController extends ChargeController {
         .description(chargeRequest.getDescription())
         .build();
     log.info(
-        "blasPaymentTransactionLogId: " + blasPaymentTransactionLog.getPaymentTransactionLogId());
+        "blasPaymentTransactionLogId: " + stripePaymentTransactionLog.getPaymentTransactionLogId());
     String cardId = chargeRequest.getCardId();
     Card card = cardService.getCardInfoByCardId(cardId, true);
     if (!username.equals(card.getAuthUser().getUsername())) {
-      blasPaymentTransactionLog.setLogMessage1(INVALID_CARD);
-      blasPaymentTransactionLog.setCard(card);
-      blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
+      stripePaymentTransactionLog.setLogMessage1(INVALID_CARD);
+      stripePaymentTransactionLog.setCard(card);
+      stripePaymentTransactionLogService.createStripePaymentTransactionLog(
+          stripePaymentTransactionLog);
       throw new PaymentException(MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), INVALID_CARD);
+          stripePaymentTransactionLog.getPaymentTransactionLogId(), INVALID_CARD);
     }
     if (!card.isActive()) {
       throw new PaymentException(MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_CARD);
+          stripePaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_CARD);
     }
-    blasPaymentTransactionLog.setCard(card);
+    stripePaymentTransactionLog.setCard(card);
     Charge charge;
     final String blasSecretKey = keyService.getBlasPrivateKey();
     String plainTextCardNumber;
     try {
       charge = paymentsService.charge(chargeRequest);
-      blasPaymentTransactionLog.setStripeTransactionId(charge.getId());
-      blasPaymentTransactionLog.setAmountCaptured(charge.getAmountCaptured());
-      blasPaymentTransactionLog.setAmountRefund(charge.getAmountRefunded());
-      blasPaymentTransactionLog.setReceiptUrl(charge.getReceiptUrl());
-      blasPaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
-      blasPaymentTransactionLog.setCardType(
+      stripePaymentTransactionLog.setStripeTransactionId(charge.getId());
+      stripePaymentTransactionLog.setAmountCaptured(charge.getAmountCaptured());
+      stripePaymentTransactionLog.setAmountRefund(charge.getAmountRefunded());
+      stripePaymentTransactionLog.setReceiptUrl(charge.getReceiptUrl());
+      stripePaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
+      stripePaymentTransactionLog.setCardType(
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());
       plainTextCardNumber = aesDecrypt(blasSecretKey, card.getCardNumber());
-      blasPaymentTransactionLog.setMaskedCardNumber(
+      stripePaymentTransactionLog.setMaskedCardNumber(
           maskCardNumber(plainTextCardNumber));
-      blasPaymentTransactionLog.setRefund(charge.getRefunded());
+      stripePaymentTransactionLog.setRefund(charge.getRefunded());
       new Thread(() -> {
         try {
           String cardNumber = aesDecrypt(keyService.getBlasPrivateKey(),
               cardService.getCardInfoByCardId(card.getCardId(), true).getCardNumber());
-          sendReceiptEmail(blasPaymentTransactionLog, username, cardNumber, charge);
+          sendStripeReceiptEmail(stripePaymentTransactionLog, username, cardNumber, charge);
         } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  NoSuchPaddingException | BadPaddingException | NoSuchAlgorithmException |
                  InvalidKeyException exception) {
@@ -107,29 +108,30 @@ public class AddedCardChargeController extends ChargeController {
         }
       }).start();
       ChargeResponse response = buildChargeResponse(
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), charge, cardId,
+          stripePaymentTransactionLog.getPaymentTransactionLogId(), charge, cardId,
           plainTextCardNumber, false, username);
       log.info(response.toString());
       log.debug("Complete transaction");
       return ResponseEntity.ok(response);
     } catch (StripeException exception) {
-      blasPaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
-      blasPaymentTransactionLog.setLogMessage1(exception.toString());
-      blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
-      blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
+      stripePaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
+      stripePaymentTransactionLog.setLogMessage1(exception.toString());
+      stripePaymentTransactionLog.setLogMessage2(exception.getMessage());
+      stripePaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
       throw new PaymentException(MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(),
+          stripePaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage(), exception);
     } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
-      blasPaymentTransactionLog.setLogMessage1(exception.toString());
-      blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
+      stripePaymentTransactionLog.setLogMessage1(exception.toString());
+      stripePaymentTransactionLog.setLogMessage2(exception.getMessage());
       throw new PaymentException(MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage(),
+          stripePaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage(),
           exception);
     } finally {
       log.debug("Complete transaction");
-      blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
+      stripePaymentTransactionLogService.createStripePaymentTransactionLog(
+          stripePaymentTransactionLog);
     }
   }
 }

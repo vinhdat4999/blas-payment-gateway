@@ -21,8 +21,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "blas_payment_transaction_logs")
-public class BlasPaymentTransactionLog {
+@Table(name = "stripe_payment_transaction_logs")
+public class StripePaymentTransactionLog {
 
   @Id
   @Column(name = "payment_transaction_log_id", length = 50, nullable = false)
@@ -35,11 +35,11 @@ public class BlasPaymentTransactionLog {
   private LocalDateTime transactionTime;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "card_id", foreignKey = @ForeignKey(name = "fk_blas_payment_transaction_log_1"))
+  @JoinColumn(name = "card_id", foreignKey = @ForeignKey(name = "fk_stripe_payment_transaction_log_1"))
   private Card card;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_blas_payment_transaction_log_2"))
+  @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_stripe_payment_transaction_log_2"))
   private AuthUser authUser;
 
   @Column(name = "amount_captured", nullable = false)
@@ -47,7 +47,6 @@ public class BlasPaymentTransactionLog {
 
   @Column(name = "amount_refund", nullable = false)
   private long amountRefund;
-
 
   @Column(name = "currency", nullable = false)
   private String currency;

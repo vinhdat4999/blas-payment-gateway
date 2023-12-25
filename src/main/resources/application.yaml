@@ -35,6 +35,14 @@ blas:
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
   blas-payment-gateway:
+    vnpay:
+      version: 2.1.0
+      tmnCode: RHC8EX66
+      payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      returnUrl: http://localhost:8083
+      checkOrderUrl: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+      vnpTxnRefLength: 8
+      orderType: other
     lengthOfId: 10
     stripe:
       publicKey: pk_test_51N24huL1cmxigSStQZYtGY6tOFtkYx58UFg6rZ23ztdNanXvWFUny4Q56RtpnVRAMTvCDA54SSQuSqUX9rPf7oKp00VTzCV4FB
