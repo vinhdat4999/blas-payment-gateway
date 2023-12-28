@@ -1,6 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
-import static com.blas.blascommon.enums.EmailTemplate.PAYMENT_RECEIPT;
+import static com.blas.blascommon.enums.EmailTemplate.STRIPE_PAYMENT_RECEIPT;
 import static com.blas.blascommon.utils.IdUtils.genMixID;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
 import static com.blas.blaspaymentgateway.utils.PaymentUtils.maskCardNumber;
@@ -9,17 +9,18 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.blas.blascommon.configurations.EmailQueueService;
 import com.blas.blascommon.core.model.AuthUser;
+import com.blas.blascommon.core.model.UserDetail;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.jwt.JwtTokenUtil;
-import com.blas.blascommon.payload.ChargeResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
+import com.blas.blascommon.payload.payment.ChargeResponse;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blascommon.utils.StringUtils;
-import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
-import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
+import com.blas.blaspaymentgateway.model.StripePaymentTransactionLog;
 import com.blas.blaspaymentgateway.service.CardService;
-import com.blas.blaspaymentgateway.service.StripeService;
+import com.blas.blaspaymentgateway.service.StripePaymentTransactionLogService;
+import com.blas.blaspaymentgateway.service.merchants.StripeService;
 import com.stripe.model.Charge;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -52,7 +53,7 @@ public class ChargeController {
   @Lazy
   protected final StripeService paymentsService;
   @Lazy
-  protected final BlasPaymentTransactionLogService blasPaymentTransactionLogService;
+  protected final StripePaymentTransactionLogService stripePaymentTransactionLogService;
   @Lazy
   private final EmailQueueService emailQueueService;
   @Value("${blas.blas-idp.isSendEmailAlert}")
@@ -63,11 +64,11 @@ public class ChargeController {
   protected int lengthOfId;
 
   protected static String genTransactionId(
-      BlasPaymentTransactionLogService blasPaymentTransactionLogService, int lengthOfId) {
+      StripePaymentTransactionLogService stripePaymentTransactionLogService, int lengthOfId) {
     String transactionId;
     do {
       transactionId = genMixID(lengthOfId).toUpperCase();
-    } while (blasPaymentTransactionLogService.isExistedId(transactionId));
+    } while (stripePaymentTransactionLogService.isExistedId(transactionId));
     return transactionId;
   }
 
@@ -97,17 +98,19 @@ public class ChargeController {
     return (double) (amount) / 100 + StringUtils.SPACE + currency.toUpperCase();
   }
 
-  protected void sendReceiptEmail(BlasPaymentTransactionLog blasPaymentTransaction, String username,
+  protected void sendStripeReceiptEmail(StripePaymentTransactionLog blasPaymentTransaction,
+      String username,
       String cardNumber, Charge charge) {
     AuthUser authUser = authUserService.getAuthUserByUsername(username);
     HtmlEmailRequest htmlEmailRequest = new HtmlEmailRequest();
-    htmlEmailRequest.setEmailTo(authUser.getUserDetail().getEmail());
+    UserDetail userDetail = authUser.getUserDetail();
+    htmlEmailRequest.setEmailTo(userDetail.getEmail());
     htmlEmailRequest.setTitle(SUBJECT_EMAIL_RECEIPT);
-    htmlEmailRequest.setEmailTemplateName(PAYMENT_RECEIPT.name());
+    htmlEmailRequest.setEmailTemplateName(STRIPE_PAYMENT_RECEIPT.name());
     htmlEmailRequest.setData(Map.ofEntries(
-        Map.entry("email", authUser.getUserDetail().getEmail()),
-        Map.entry("phone", authUser.getUserDetail().getPhoneNumber()),
-        Map.entry("name", authUser.getUserDetail().getFirstName() + SPACE + authUser.getUserDetail()
+        Map.entry("email", userDetail.getEmail()),
+        Map.entry("phone", userDetail.getPhoneNumber()),
+        Map.entry("name", userDetail.getFirstName() + SPACE + userDetail
             .getLastName()),
         Map.entry("transactionId", blasPaymentTransaction.getPaymentTransactionLogId()),
         Map.entry("transactionTime", blasPaymentTransaction.getTransactionTime().toString()),

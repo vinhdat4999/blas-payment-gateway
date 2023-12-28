@@ -12,14 +12,14 @@ import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.exceptions.BlasErrorCodeEnum;
 import com.blas.blascommon.exceptions.types.PaymentException;
 import com.blas.blascommon.jwt.JwtTokenUtil;
-import com.blas.blascommon.payload.ChargeResponse;
-import com.blas.blascommon.payload.GuestChargeRequest;
+import com.blas.blascommon.payload.payment.ChargeResponse;
+import com.blas.blascommon.payload.payment.StripeGuestChargeRequest;
 import com.blas.blascommon.security.KeyService;
-import com.blas.blaspaymentgateway.model.BlasPaymentTransactionLog;
 import com.blas.blaspaymentgateway.model.Card;
-import com.blas.blaspaymentgateway.service.BlasPaymentTransactionLogService;
+import com.blas.blaspaymentgateway.model.StripePaymentTransactionLog;
 import com.blas.blaspaymentgateway.service.CardService;
-import com.blas.blaspaymentgateway.service.StripeService;
+import com.blas.blaspaymentgateway.service.StripePaymentTransactionLogService;
+import com.blas.blaspaymentgateway.service.merchants.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import java.security.InvalidAlgorithmParameterException;
@@ -44,20 +44,20 @@ public class GuestChargeController extends ChargeController {
   public GuestChargeController(AuthUserService authUserService, StripeService stripeService,
       CardService cardService, KeyService keyService, CentralizedLogService centralizedLogService,
       JwtTokenUtil jwtTokenUtil, StripeService paymentsService,
-      BlasPaymentTransactionLogService blasPaymentTransactionLogService,
+      StripePaymentTransactionLogService stripePaymentTransactionLogService,
       EmailQueueService emailQueueService) {
     super(authUserService, stripeService, cardService, keyService, centralizedLogService,
-        jwtTokenUtil, paymentsService, blasPaymentTransactionLogService, emailQueueService);
+        jwtTokenUtil, paymentsService, stripePaymentTransactionLogService, emailQueueService);
   }
 
   @PostMapping(value = "/guest-charge")
   public ResponseEntity<ChargeResponse> guestCharge(
-      @RequestBody GuestChargeRequest guestChargeRequest, Authentication authentication)
+      @RequestBody StripeGuestChargeRequest guestChargeRequest, Authentication authentication)
       throws InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
     log.debug("Start transaction...");
     String username = authentication.getName();
-    BlasPaymentTransactionLog blasPaymentTransactionLog = BlasPaymentTransactionLog.builder()
-        .paymentTransactionLogId(genTransactionId(blasPaymentTransactionLogService, lengthOfId))
+    StripePaymentTransactionLog stripePaymentTransactionLog = StripePaymentTransactionLog.builder()
+        .paymentTransactionLogId(genTransactionId(stripePaymentTransactionLogService, lengthOfId))
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(username))
         .currency(guestChargeRequest.getCurrency().name())
@@ -66,58 +66,53 @@ public class GuestChargeController extends ChargeController {
         .isGuestCard(true)
         .build();
     log.info(
-        "blasPaymentTransactionLogId: " + blasPaymentTransactionLog.getPaymentTransactionLogId());
+        "blasPaymentTransactionLogId: " + stripePaymentTransactionLog.getPaymentTransactionLogId());
     String cardNumber = guestChargeRequest.getCardRequest().getCardNumber();
     final String blasSecretKey = keyService.getBlasPrivateKey();
     Card card = cardService.getCardInfoByCardNumber(aesEncrypt(blasSecretKey, cardNumber));
     if (card != null && card.getAuthUser().getUsername().equals(username)) {
       if (!card.isActive()) {
         throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
-            blasPaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_EXISTED_CARD);
+            stripePaymentTransactionLog.getPaymentTransactionLogId(), INACTIVE_EXISTED_CARD);
       }
-      blasPaymentTransactionLog.setCard(card);
-      blasPaymentTransactionLog.setNote(EXISTED_CARD_MESSAGE);
-      blasPaymentTransactionLog.setMaskedCardNumber(maskCardNumber(card.getCardNumber()));
+      stripePaymentTransactionLog.setCard(card);
+      stripePaymentTransactionLog.setNote(EXISTED_CARD_MESSAGE);
+      stripePaymentTransactionLog.setMaskedCardNumber(maskCardNumber(card.getCardNumber()));
     } else {
-      blasPaymentTransactionLog.setMaskedCardNumber(maskCardNumber(cardNumber));
+      stripePaymentTransactionLog.setMaskedCardNumber(maskCardNumber(cardNumber));
     }
     Charge charge;
     try {
       charge = paymentsService.charge(guestChargeRequest);
-      blasPaymentTransactionLog.setStripeTransactionId(charge.getId());
-      blasPaymentTransactionLog.setAmountCaptured(charge.getAmountCaptured());
-      blasPaymentTransactionLog.setAmountRefund(charge.getAmountRefunded());
-      blasPaymentTransactionLog.setReceiptUrl(charge.getReceiptUrl());
-      blasPaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
-      blasPaymentTransactionLog.setCardType(
+      stripePaymentTransactionLog.setStripeTransactionId(charge.getId());
+      stripePaymentTransactionLog.setAmountCaptured(charge.getAmountCaptured());
+      stripePaymentTransactionLog.setAmountRefund(charge.getAmountRefunded());
+      stripePaymentTransactionLog.setReceiptUrl(charge.getReceiptUrl());
+      stripePaymentTransactionLog.setStatus(charge.getStatus().toUpperCase());
+      stripePaymentTransactionLog.setCardType(
           charge.getPaymentMethodDetails().getCard().getBrand().toUpperCase());
-      blasPaymentTransactionLog.setRefund(charge.getRefunded());
+      stripePaymentTransactionLog.setRefund(charge.getRefunded());
       new Thread(
-          () -> sendReceiptEmail(blasPaymentTransactionLog, username, cardNumber, charge)).start();
+          () -> sendStripeReceiptEmail(stripePaymentTransactionLog, username, cardNumber,
+              charge)).start();
       ChargeResponse response = buildChargeResponse(
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), charge, null,
+          stripePaymentTransactionLog.getPaymentTransactionLogId(), charge, null,
           cardNumber, true, username);
       log.info(response.toString());
       log.debug("Complete transaction");
       return ResponseEntity.ok(response);
     } catch (StripeException exception) {
-      blasPaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
-      blasPaymentTransactionLog.setLogMessage1(exception.toString());
-      blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
-      blasPaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
+      stripePaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());
+      stripePaymentTransactionLog.setLogMessage1(exception.toString());
+      stripePaymentTransactionLog.setLogMessage2(exception.getMessage());
+      stripePaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
       throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(),
+          stripePaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage(), exception);
-    } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
-             InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
-      blasPaymentTransactionLog.setLogMessage1(exception.toString());
-      blasPaymentTransactionLog.setLogMessage2(exception.getMessage());
-      throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
-          blasPaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage(),
-          exception);
     } finally {
       log.debug("Complete transaction");
-      blasPaymentTransactionLogService.createBlasPaymentTransactionLog(blasPaymentTransactionLog);
+      stripePaymentTransactionLogService.createStripePaymentTransactionLog(
+          stripePaymentTransactionLog);
     }
   }
 }

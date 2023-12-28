@@ -1,14 +1,15 @@
-package com.blas.blaspaymentgateway.service;
+package com.blas.blaspaymentgateway.service.merchants;
 
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.STRIPE_PRIVATE_KEY;
 
 import com.blas.blascommon.core.service.BlasConfigService;
-import com.blas.blascommon.payload.CardRequest;
-import com.blas.blascommon.payload.ChargeRequest;
-import com.blas.blascommon.payload.GuestChargeRequest;
+import com.blas.blascommon.payload.payment.CardRequest;
+import com.blas.blascommon.payload.payment.StripeChargeRequest;
+import com.blas.blascommon.payload.payment.StripeGuestChargeRequest;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blaspaymentgateway.model.Card;
+import com.blas.blaspaymentgateway.service.CardService;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
@@ -46,7 +47,7 @@ public class StripeService {
     Stripe.apiKey = aesDecrypt(blasSecretKey, hashedSecretKey);
   }
 
-  public Charge charge(final ChargeRequest chargeRequest)
+  public Charge charge(final StripeChargeRequest chargeRequest)
       throws StripeException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
     final Card card = cardService.getCardInfoByCardId(chargeRequest.getCardId(), true);
     final Map<String, Object> chargeParams = Map.ofEntries(
@@ -57,8 +58,8 @@ public class StripeService {
     return Charge.create(chargeParams);
   }
 
-  public Charge charge(final GuestChargeRequest guestChargeRequest)
-      throws StripeException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+  public Charge charge(final StripeGuestChargeRequest guestChargeRequest)
+      throws StripeException {
     final CardRequest cardRequest = guestChargeRequest.getCardRequest();
     final Card card = Card.builder()
         .cardNumber(cardRequest.getCardNumber())

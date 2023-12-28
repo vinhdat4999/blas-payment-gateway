@@ -6,6 +6,7 @@ import com.blas.blascommon.security.hash.Sha256Encoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+@EnableAsync
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -41,10 +43,12 @@ public class WebSecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http, JwtRequestFilter jwtRequestFilter,
       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(authorize -> authorize.requestMatchers("/auth/**", "/actuator/**")
-            .permitAll()
-            .anyRequest()
-            .hasAnyRole("ADMIN", "BOD", "MAINTAINER", "MANAGER", "USER"));
+        .authorizeHttpRequests(
+            authorize -> authorize.requestMatchers("/auth/**", "/actuator/**",
+                    "/vnpay/handle-payment/**")
+                .permitAll()
+                .anyRequest()
+                .hasAnyRole("ADMIN", "BOD", "MAINTAINER", "MANAGER", "USER"));
     http.exceptionHandling(
             authorize -> authorize.authenticationEntryPoint(jwtAuthenticationEntryPoint))
         .sessionManagement(

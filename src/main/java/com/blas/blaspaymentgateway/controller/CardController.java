@@ -14,13 +14,13 @@ import static org.springframework.http.HttpStatus.OK;
 import com.blas.blascommon.configurations.EmailQueueService;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
-import com.blas.blascommon.payload.CardRequest;
-import com.blas.blascommon.payload.CardResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
+import com.blas.blascommon.payload.payment.CardRequest;
+import com.blas.blascommon.payload.payment.CardResponse;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.CardService;
-import com.blas.blaspaymentgateway.service.StripeService;
+import com.blas.blaspaymentgateway.service.merchants.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Token;
 import java.security.InvalidAlgorithmParameterException;
@@ -82,11 +82,7 @@ public class CardController {
           .build();
       final String rawCardNumber = card.getCardNumber();
       Token token;
-      try {
-        token = stripeService.getStripeTransactionTokenWithRawCardInfo(card);
-      } catch (StripeException exception) {
-        throw new BadRequestException(exception.getStripeError().getMessage(), exception);
-      }
+      token = stripeService.getStripeTransactionTokenWithRawCardInfo(card);
       card.setCardNumber(aesEncrypt(blasSecretKey, card.getCardNumber()));
       card.setCardHolder(aesEncrypt(blasSecretKey, card.getCardHolder()));
       card.setExpMonth(aesEncrypt(blasSecretKey, card.getExpMonth()));
@@ -109,6 +105,8 @@ public class CardController {
              InvalidAlgorithmParameterException | InvalidKeyException |
              NoSuchPaddingException | NoSuchAlgorithmException exception) {
       throw new BadRequestException(MSG_BLAS_APP_FAILURE, exception);
+    } catch (StripeException stripeException) {
+      throw new BadRequestException(stripeException.getStripeError().getMessage(), stripeException);
     }
   }
 
