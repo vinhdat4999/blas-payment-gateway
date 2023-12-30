@@ -49,12 +49,16 @@ public class CardController {
 
   @Lazy
   private final AuthUserService authUserService;
+
   @Lazy
   private final StripeService stripeService;
+
   @Lazy
   private final CardService cardService;
+
   @Lazy
   private final KeyService keyService;
+
   @Lazy
   private final EmailQueueService emailQueueService;
 

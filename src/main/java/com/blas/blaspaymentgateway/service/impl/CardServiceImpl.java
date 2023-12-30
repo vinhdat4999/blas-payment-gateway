@@ -12,22 +12,21 @@ import com.blas.blaspaymentgateway.dao.CardDao;
 import com.blas.blaspaymentgateway.model.Card;
 import com.blas.blaspaymentgateway.service.CardService;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(rollbackFor = {Exception.class, Throwable.class})
 public class CardServiceImpl implements CardService {
 
   @Lazy
-  @Autowired
-  private CardDao cardDao;
+  private final CardDao cardDao;
 
   @Lazy
-  @Autowired
-  private AuthUserDao authUserDao;
+  private final AuthUserDao authUserDao;
 
   @Override
   public String addNewCard(Card card) {
