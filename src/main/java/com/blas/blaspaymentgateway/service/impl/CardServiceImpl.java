@@ -36,8 +36,10 @@ public class CardServiceImpl implements CardService {
 
   @Override
   public List<Card> getCardListOfUser(String userId) {
-    authUserDao.findById(userId).orElseThrow(() -> new NotFoundException(USER_ID_NOT_FOUND));
-    return cardDao.getCardListOfUser(userId);
+    if (authUserDao.existsById(userId)) {
+      return cardDao.getCardListOfUser(userId);
+    }
+    throw new NotFoundException(USER_ID_NOT_FOUND);
   }
 
   @Override
