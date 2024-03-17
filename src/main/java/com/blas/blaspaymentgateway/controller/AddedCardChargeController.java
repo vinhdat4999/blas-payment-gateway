@@ -1,5 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
+import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
@@ -33,6 +34,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -118,6 +120,10 @@ public class AddedCardChargeController extends ChargeController {
       stripePaymentTransactionLog.setLogMessage1(exception.toString());
       stripePaymentTransactionLog.setLogMessage2(exception.getMessage());
       stripePaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
+      centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),
+          String.valueOf(exception.getCause()),
+          stripePaymentTransactionLog.toString(), null, null,
+          String.valueOf(new JSONArray(exception.getStackTrace())), isSendEmailAlert);
       throw new PaymentException(MSG_FAILURE,
           stripePaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage(), exception);
@@ -125,6 +131,10 @@ public class AddedCardChargeController extends ChargeController {
              InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException exception) {
       stripePaymentTransactionLog.setLogMessage1(exception.toString());
       stripePaymentTransactionLog.setLogMessage2(exception.getMessage());
+      centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),
+          String.valueOf(exception.getCause()),
+          stripePaymentTransactionLog.toString(), null, null,
+          String.valueOf(new JSONArray(exception.getStackTrace())), isSendEmailAlert);
       throw new PaymentException(MSG_FAILURE,
           stripePaymentTransactionLog.getPaymentTransactionLogId(), exception.getMessage(),
           exception);

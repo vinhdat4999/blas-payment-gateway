@@ -37,6 +37,7 @@ import com.blas.blaspaymentgateway.service.VnPayPaymentTransactionLogService;
 import com.blas.blaspaymentgateway.service.merchants.VnPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -72,6 +73,7 @@ public class VnPayController {
 
   @Lazy
   private final VnPayPaymentTransactionLogService vnPayPaymentTransactionLogService;
+
   @Lazy
   private final EmailQueueService emailQueueService;
 
@@ -92,7 +94,7 @@ public class VnPayController {
       @RequestParam(value = HASHED_VNP_TXN_REF) String hashedVnpTxnRef,
       @RequestParam(value = HASHED_TRANSACTION_DATE) String hashedTransactionDate,
       HttpServletRequest request)
-      throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+      throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
     final String blasPrivateKey = keyService.getBlasPrivateKey();
     final String vnpTxnRef = decode(aesDecrypt(blasPrivateKey, hashedVnpTxnRef), UTF_8);
     final String transactionDate = decode(aesDecrypt(blasPrivateKey, hashedTransactionDate), UTF_8);
@@ -123,7 +125,6 @@ public class VnPayController {
             vnPayPaymentTransactionLog)).start();
     return response.toString();
   }
-
 
   private void sendVnPayReceiptEmail(String username,
       VnPayPaymentTransactionLog vnPayPaymentTransactionLog) {

@@ -14,6 +14,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/blas
 management:
   endpoints:
     web:
@@ -35,7 +38,7 @@ blas:
     throughServiceSupport: true
     endpointCheckMaintenance: http://localhost:8084/maintenance/check
   blas-idp:
-    isSendEmailAlert: true
+    isSendEmailAlert: false
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
   blas-payment-gateway:
