@@ -40,26 +40,37 @@ public class ChargeController {
 
   @Lazy
   protected final AuthUserService authUserService;
+
   @Lazy
   protected final StripeService stripeService;
+
   @Lazy
   protected final CardService cardService;
+
   @Lazy
   protected final KeyService keyService;
+
   @Lazy
   protected final CentralizedLogService centralizedLogService;
+
   @Lazy
   protected final JwtTokenUtil jwtTokenUtil;
+
   @Lazy
   protected final StripeService paymentsService;
+
   @Lazy
   protected final StripePaymentTransactionLogService stripePaymentTransactionLogService;
+
   @Lazy
   private final EmailQueueService emailQueueService;
+
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
+
   @Value("${blas.service.serviceName}")
   protected String serviceName;
+
   @Value("${blas.blas-payment-gateway.lengthOfId}")
   protected int lengthOfId;
 

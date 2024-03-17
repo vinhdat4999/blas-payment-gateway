@@ -1,5 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
+import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_EXISTED_CARD;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_FAILED;
@@ -29,6 +30,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -106,6 +108,10 @@ public class GuestChargeController extends ChargeController {
       stripePaymentTransactionLog.setLogMessage1(exception.toString());
       stripePaymentTransactionLog.setLogMessage2(exception.getMessage());
       stripePaymentTransactionLog.setLogMessage3(exception.getStripeError().toString());
+      centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),
+          String.valueOf(exception.getCause()),
+          stripePaymentTransactionLog.toString(), null, null,
+          String.valueOf(new JSONArray(exception.getStackTrace())), isSendEmailAlert);
       throw new PaymentException(BlasErrorCodeEnum.MSG_FAILURE,
           stripePaymentTransactionLog.getPaymentTransactionLogId(),
           exception.getStripeError().getMessage(), exception);

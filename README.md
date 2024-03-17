@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 2.2.0   | 18/03/2024   | Uptake blas-bom 1.16.0 and blas-common 5.0.0                           |
 | 2.1.0   | 01/01/2024   | Add time zone configuration and PDF password                           |
 | 2.0.0   | 31/12/2023   | Support VNPay payment                                                  |
 | 1.11.0  | 08/12/2023   | Support Micrometer Prometheus metrics                                  |

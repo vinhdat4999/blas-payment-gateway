@@ -10,7 +10,6 @@ import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blascommon.utils.IpUtils.getIpAddress;
 import static com.blas.blascommon.utils.datetimeutils.DateTimeUtils.DATE_YYYYMMDDHHMMSS_SLASH_FORMAT;
 import static com.blas.blascommon.utils.datetimeutils.DateTimeUtils.GMT7_POSITIVE_ZONE;
-import static com.blas.blascommon.utils.httprequest.PostRequest.sendPostRequestWithJsonObjectPayload;
 import static com.blas.blaspaymentgateway.constants.VnPay.HASHED_TRANSACTION_DATE;
 import static com.blas.blaspaymentgateway.constants.VnPay.HASHED_VNP_TXN_REF;
 import static com.blas.blaspaymentgateway.constants.VnPay.LANGUAGE;
@@ -47,11 +46,14 @@ import com.blas.blascommon.core.service.BlasConfigService;
 import com.blas.blascommon.enums.Currency;
 import com.blas.blascommon.payload.HttpResponse;
 import com.blas.blascommon.security.KeyService;
+import com.blas.blascommon.utils.httprequest.HttpMethod;
+import com.blas.blascommon.utils.httprequest.HttpRequest;
 import com.blas.blaspaymentgateway.model.VnPayPaymentTransactionLog;
 import com.blas.blaspaymentgateway.properties.VnPayProperties;
 import com.blas.blaspaymentgateway.service.VnPayPaymentTransactionLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -95,6 +97,9 @@ public class VnPayService {
 
   @Lazy
   private final BlasConfigService blasConfigService;
+
+  @Lazy
+  private final HttpRequest httpRequest;
 
   public String createPayUrlVnPay(HttpServletRequest request, long amount, int expiredInMinus,
       Currency currency, String bankCode, String description)
@@ -189,7 +194,7 @@ public class VnPayService {
   }
 
   public JSONObject checkOrder(HttpServletRequest request, String vnpTxnRef, String transactionDate)
-      throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+      throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
     String vnpRequestId = genNumericID(vnPayProperties.getVnpTxnRefLength());
     String vnpOrderInfo = "Kiem tra ket qua GD OrderId:" + vnpTxnRef;
 
@@ -219,9 +224,9 @@ public class VnPayService {
         hashData);
     vnpParams.put(VNP_SECURE_HASH, vnpSecureHash);
 
-    HttpResponse response = sendPostRequestWithJsonObjectPayload(vnPayProperties.getCheckOrderUrl(),
-        null,
-        null, vnpParams);
+    HttpResponse response = httpRequest.sendRequestWithJsonObjectPayload(
+        vnPayProperties.getCheckOrderUrl(),
+        HttpMethod.POST, null, null, vnpParams);
     log.info("Check VNPay order result. vnpRequestId: {}, transactionDate: {}", vnpRequestId,
         transactionDate);
     return new JSONObject(response.getResponse());
