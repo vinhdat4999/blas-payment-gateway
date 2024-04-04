@@ -8,6 +8,12 @@ spring:
     url: jdbc:mysql://localhost:3306/blas
     username: root
     password: 123456
+  #  data:
+  #    mongodb:
+  #      uri: mongodb://localhost:27017/blas
+  data:
+    mongodb:
+      uri: mongodb+srv://vinhdat4999:hpDOksLujqSukEbt@blas.ofn7pbk.mongodb.net/blas
   jpa:
     hibernate:
       ddl-auto: none
@@ -16,9 +22,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/blas
 management:
   endpoints:
     web:
