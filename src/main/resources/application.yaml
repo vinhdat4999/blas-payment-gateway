@@ -1,11 +1,19 @@
 server:
   port: 8083
 spring:
+  profiles:
+    active: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
     username: root
     password: 123456
+  #  data:
+  #    mongodb:
+  #      uri: mongodb://localhost:27017/blas
+  data:
+    mongodb:
+      uri: mongodb+srv://vinhdat4999:hpDOksLujqSukEbt@blas.ofn7pbk.mongodb.net/blas
   jpa:
     hibernate:
       ddl-auto: none
@@ -14,9 +22,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/blas
 management:
   endpoints:
     web:
@@ -51,11 +56,18 @@ blas:
       vnpTxnRefLength: 8
       orderType: other
     lengthOfId: 10
+  hazelcast:
+    aksNamespace: dev
+    hazelcastService: hazelcast
 
-#logging:
-#  file:
-#    name: application.log
-#  level:
-#    root: DEBUG
-#    org.springframework: WARN
-#    com.blas: DEBUG
+logging:
+  level:
+    root: INFO
+    com.blas: DEBUG
+    org.hibernate: WARN
+    com.azure: WARN
+    io.micrometer: WARN
+    com.hazelcast: WARN
+    org.mongodb: WARN
+    org.springframework: WARN
+    org.apache.http: WARN
