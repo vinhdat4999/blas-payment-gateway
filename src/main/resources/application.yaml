@@ -44,8 +44,6 @@ blas:
     endpointCheckMaintenance: http://localhost:8084/maintenance/check
   blas-idp:
     isSendEmailAlert: false
-    jwt:
-      timeToExpiredInternalToken: 120 #2 minutes
   blas-payment-gateway:
     vnpay:
       version: 2.1.0

@@ -39,16 +39,11 @@ data:
       certificate: BlasSecretKey.p12
       service:
         serviceName: blas-payment-gateway
-      gate-interceptor:
-        enableLogRequest: true
-        enableLogLocalRequest: false
       blas-service-support:
         throughServiceSupport: true
         endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local/maintenance/check
       blas-idp:
         isSendEmailAlert: false
-        jwt:
-          timeToExpiredInternalToken: 120 #2 minutes
       blas-payment-gateway:
         vnpay:
           version: 2.1.0

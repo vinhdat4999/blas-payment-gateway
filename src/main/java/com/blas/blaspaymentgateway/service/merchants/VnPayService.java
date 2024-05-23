@@ -1,6 +1,7 @@
 package com.blas.blaspaymentgateway.service.merchants;
 
 import static com.blas.blascommon.constants.BlasConstant.VNPAY_SECRET_KEY;
+import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
@@ -75,6 +76,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -175,6 +177,7 @@ public class VnPayService {
     vnPayPaymentTransactionLogService.createVnPayPaymentTransactionLog(
         VnPayPaymentTransactionLog.builder()
             .paymentTransactionLogId(paymentTransactionLogId)
+            .globalId(MDC.get(GLOBAL_ID))
             .txnRef(vnpTxnRef)
             .transactionTime(LocalDateTime.now())
             .authUser(authUserService.getAuthUserByUsername(getUsernameLoggedIn()))

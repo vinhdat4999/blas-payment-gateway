@@ -1,5 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
+import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.enums.EmailTemplate.ADD_CARD_SUCCESS;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
@@ -35,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -103,7 +105,7 @@ public class CardController {
           .addedTime(now())
           .message(CARD_ADDED_SUCCESSFULLY)
           .build();
-      log.info("New card added. " + response.toString());
+      log.info("GlobalId: {} - New card added. {}", MDC.get(GLOBAL_ID), response.toString());
       return ResponseEntity.ok(response);
     } catch (IllegalBlockSizeException | BadPaddingException |
              InvalidAlgorithmParameterException | InvalidKeyException |
