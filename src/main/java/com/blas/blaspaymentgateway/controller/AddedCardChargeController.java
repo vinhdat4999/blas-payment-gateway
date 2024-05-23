@@ -1,5 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
+import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
@@ -33,6 +34,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,6 +59,7 @@ public class AddedCardChargeController extends ChargeController {
     String username = getUsernameLoggedIn();
     StripePaymentTransactionLog stripePaymentTransactionLog = StripePaymentTransactionLog.builder()
         .paymentTransactionLogId(genTransactionId(stripePaymentTransactionLogService, lengthOfId))
+        .globalId(MDC.get(GLOBAL_ID))
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(username))
         .currency(chargeRequest.getCurrency().name())
@@ -111,7 +114,6 @@ public class AddedCardChargeController extends ChargeController {
           stripePaymentTransactionLog.getPaymentTransactionLogId(), charge, cardId,
           plainTextCardNumber, false, username);
       log.info(response.toString());
-      log.debug("Complete transaction");
       return ResponseEntity.ok(response);
     } catch (StripeException exception) {
       stripePaymentTransactionLog.setStripeTransactionId(exception.getStripeError().getCharge());

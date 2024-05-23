@@ -1,5 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
+import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INACTIVE_EXISTED_CARD;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_FAILED;
@@ -29,6 +30,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,6 +60,7 @@ public class GuestChargeController extends ChargeController {
     String username = authentication.getName();
     StripePaymentTransactionLog stripePaymentTransactionLog = StripePaymentTransactionLog.builder()
         .paymentTransactionLogId(genTransactionId(stripePaymentTransactionLogService, lengthOfId))
+        .globalId(MDC.get(GLOBAL_ID))
         .transactionTime(now())
         .authUser(authUserService.getAuthUserByUsername(username))
         .currency(guestChargeRequest.getCurrency().name())

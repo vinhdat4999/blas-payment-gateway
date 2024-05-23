@@ -28,6 +28,9 @@ public class VnPayPaymentTransactionLog {
   @Column(name = "payment_transaction_log_id", length = 50, nullable = false)
   private String paymentTransactionLogId;
 
+  @Column(name = "global_id", length = 50, nullable = false)
+  private String globalId;
+
   @Column(name = "txn_ref", length = 50, nullable = false)
   private String txnRef;
 
