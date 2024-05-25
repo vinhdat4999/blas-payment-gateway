@@ -5,7 +5,7 @@ import static com.blas.blaspaymentgateway.constants.PaymentGateway.STRIPE_PRIVAT
 
 import com.blas.blascommon.core.service.BlasConfigService;
 import com.blas.blascommon.payload.payment.CardRequest;
-import com.blas.blascommon.payload.payment.StripeChargeRequest;
+import com.blas.blascommon.payload.payment.StripeAddedChargeRequest;
 import com.blas.blascommon.payload.payment.StripeGuestChargeRequest;
 import com.blas.blascommon.security.KeyService;
 import com.blas.blaspaymentgateway.model.Card;
@@ -47,7 +47,7 @@ public class StripeService {
     Stripe.apiKey = aesDecrypt(blasSecretKey, hashedSecretKey);
   }
 
-  public Charge charge(final StripeChargeRequest chargeRequest)
+  public Charge addedCardCharge(final StripeAddedChargeRequest chargeRequest)
       throws StripeException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
     final Card card = cardService.getCardInfoByCardId(chargeRequest.getCardId(), true);
     final Map<String, Object> chargeParams = Map.ofEntries(
@@ -58,7 +58,7 @@ public class StripeService {
     return Charge.create(chargeParams);
   }
 
-  public Charge charge(final StripeGuestChargeRequest guestChargeRequest)
+  public Charge guestCardCharge(final StripeGuestChargeRequest guestChargeRequest)
       throws StripeException {
     final CardRequest cardRequest = guestChargeRequest.getCardRequest();
     final Card card = Card.builder()

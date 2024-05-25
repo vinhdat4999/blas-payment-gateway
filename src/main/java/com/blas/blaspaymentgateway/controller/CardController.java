@@ -70,12 +70,14 @@ public class CardController {
     try {
       String username = authentication.getName();
       final String blasSecretKey = keyService.getBlasPrivateKey();
+
       for (Card card : cardService.getAllCards()) {
         if (aesDecrypt(blasSecretKey, card.getCardNumber()).equals(cardRequest.getCardNumber())
             && StringUtils.equals(username, card.getAuthUser().getUsername())) {
           throw new BadRequestException(CARD_EXISTED);
         }
       }
+
       Card card = Card.builder()
           .authUser(authUserService.getAuthUserByUsername(username))
           .cardNumber(cardRequest.getCardNumber())
@@ -86,7 +88,7 @@ public class CardController {
           .addedTime(now())
           .isActive(true)
           .build();
-      final String rawCardNumber = card.getCardNumber();
+
       Token token;
       token = stripeService.getStripeTransactionTokenWithRawCardInfo(card);
       card.setCardNumber(aesEncrypt(blasSecretKey, card.getCardNumber()));
@@ -94,9 +96,12 @@ public class CardController {
       card.setExpMonth(aesEncrypt(blasSecretKey, card.getExpMonth()));
       card.setExpYear(aesEncrypt(blasSecretKey, card.getExpYear()));
       card.setCvc(aesEncrypt(blasSecretKey, card.getCvc()));
+
       String cardId = cardService.addNewCard(card);
+      final String rawCardNumber = card.getCardNumber();
       new Thread(() -> sendEmailAddCardSuccessfully(card.getAuthUser().getUserDetail().getEmail(),
           maskCardNumber(rawCardNumber), token.getCard().getBrand().toUpperCase())).start();
+
       CardResponse response = CardResponse.builder()
           .statusCode(String.valueOf(OK.value()))
           .cardId(cardId)
@@ -105,6 +110,7 @@ public class CardController {
           .addedTime(now())
           .message(CARD_ADDED_SUCCESSFULLY)
           .build();
+
       log.info("GlobalId: {} - New card added. {}", MDC.get(GLOBAL_ID), response.toString());
       return ResponseEntity.ok(response);
     } catch (IllegalBlockSizeException | BadPaddingException |
@@ -125,6 +131,7 @@ public class CardController {
         Map.entry("cardNumber", maskedCardNumber),
         Map.entry("brand", brand)
     ));
+
     emailQueueService.sendMessage(new JSONArray(List.of(htmlEmailRequest)).toString());
   }
 }
