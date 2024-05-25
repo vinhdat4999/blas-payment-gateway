@@ -98,17 +98,20 @@ public class VnPayController {
     final String blasPrivateKey = keyService.getBlasPrivateKey();
     final String vnpTxnRef = decode(aesDecrypt(blasPrivateKey, hashedVnpTxnRef), UTF_8);
     final String transactionDate = decode(aesDecrypt(blasPrivateKey, hashedTransactionDate), UTF_8);
+
     JSONObject response = vnPayService.checkOrder(request, vnpTxnRef, transactionDate);
     final String vnpResponseCode = response.optString(VNP_RESPONSE_CODE);
     if (!RESPONSE_00.getCode().equals(vnpResponseCode)) {
       throw new BadRequestException(response.optString(VNP_MESSAGE));
     }
+
     VnPayPaymentTransactionLog vnPayPaymentTransactionLog = vnPayPaymentTransactionLogService.getVnPayPaymentTransactionLog(
         paymentTransactionLogId);
     if (vnPayPaymentTransactionLog == null) {
       throw new NotFoundException(
           String.format("VNPAY transaction log ID %s not found", paymentTransactionLogId));
     }
+
     vnPayPaymentTransactionLog.setVnpPayDate(response.getString(VNP_PAY_DATE));
     vnPayPaymentTransactionLog.setVnpResponseId(response.getString(VNP_RESPONSE_ID));
     vnPayPaymentTransactionLog.setVnpTmnCode(response.getString(VNP_TMN_CODE));
@@ -119,7 +122,9 @@ public class VnPayController {
     vnPayPaymentTransactionLog.setVnpPromotionCode(response.optString(VNP_PROMOTION_CODE));
     vnPayPaymentTransactionLog.setVnpPromotionAmount(
         parseInt(defaultIfBlank(response.optString(VNP_PROMOTION_AMOUNT), "0")));
+
     vnPayPaymentTransactionLogService.saveVnPayPaymentTransactionLog(vnPayPaymentTransactionLog);
+
     new Thread(
         () -> sendVnPayReceiptEmail(vnPayPaymentTransactionLog.getAuthUser().getUsername(),
             vnPayPaymentTransactionLog)).start();
@@ -129,8 +134,9 @@ public class VnPayController {
   private void sendVnPayReceiptEmail(String username,
       VnPayPaymentTransactionLog vnPayPaymentTransactionLog) {
     AuthUser authUser = authUserService.getAuthUserByUsername(username);
-    HtmlEmailRequest htmlEmailRequest = new HtmlEmailRequest();
     UserDetail userDetail = authUser.getUserDetail();
+
+    HtmlEmailRequest htmlEmailRequest = new HtmlEmailRequest();
     htmlEmailRequest.setEmailTo(userDetail.getEmail());
     htmlEmailRequest.setTitle(SUBJECT_EMAIL_RECEIPT);
     htmlEmailRequest.setEmailTemplateName(VNPAY_PAYMENT_RECEIPT.name());
@@ -147,6 +153,7 @@ public class VnPayController {
         Map.entry("amount", String.valueOf(vnPayPaymentTransactionLog.getAmount() / 100)),
         Map.entry("currency", vnPayPaymentTransactionLog.getCurrency())
     ));
+
     emailQueueService.sendMessage(new JSONArray(List.of(htmlEmailRequest)).toString());
   }
 }

@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 2.7.0   | 26/05/2024   | Refactor code                                                          |
 | 2.6.0   | 24/05/2024   | Support Global ID to trace the request                                 |
 | 2.5.0   | 05/04/2024   | Uptake blas-bom 1.18.0 and blas-common 5.3.0                           |
 | 2.4.0   | 23/03/2024   | Upgrade Java 21                                                        |
