@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 2.8.0   | 14/06/2024   | Add MongoDB config                                                     |
 | 2.7.0   | 26/05/2024   | Refactor code                                                          |
 | 2.6.0   | 24/05/2024   | Support Global ID to trace the request                                 |
 | 2.5.0   | 05/04/2024   | Uptake blas-bom 1.18.0 and blas-common 5.3.0                           |
