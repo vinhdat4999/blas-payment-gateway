@@ -40,8 +40,14 @@ blas:
     throughServiceSupport: true
     endpointCheckMaintenance: http://localhost:8084/maintenance/check
   blas-idp:
-    isSendEmailAlert: false
+    isSendEmailAlert: true
   blas-payment-gateway:
+    imap:
+      host: imap.gmail.com
+      port: 993
+    banking-result-host:
+      endpointUrl: https://script.google.com/macros/s/AKfycbwImqaNkeT0sygSwt8ZgKDrPDOzi7eLRxJcKmFJ13j03sCEgAjSqy1og4i2pSYrNbUgMA/exec
+      postJobType: BankingPaymentRequest
     vnpay:
       version: 2.1.0
       tmnCode: RHC8EX66
@@ -58,7 +64,7 @@ blas:
 logging:
   level:
     root: INFO
-    com.blas: DEBUG
+    com.blas: INFO
     org.hibernate: WARN
     com.azure: WARN
     io.micrometer: WARN

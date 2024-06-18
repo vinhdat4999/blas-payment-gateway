@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                          |
 |---------|--------------|------------------------------------------------------------------------|
+| 3.0.0   | 18/06/2024   | Support Viet Nam Bank transaction and upgrade spring boot 3.3.0        |
 | 2.8.0   | 14/06/2024   | Add MongoDB config                                                     |
 | 2.7.0   | 26/05/2024   | Refactor code                                                          |
 | 2.6.0   | 24/05/2024   | Support Global ID to trace the request                                 |
