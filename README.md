@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                                          |
 |---------|--------------|----------------------------------------------------------------------------------------|
+| 3.2.0   | 02/08/2024   | Uptake blas-common v5.14.0                                                             |
 | 3.1.0   | 21/06/2024   | Revert to version 2.8.0, split Banking Payment to blas-banking-payment-gateway service |
 | 3.0.0   | 18/06/2024   | Support Viet Nam Bank transaction and upgrade spring boot 3.3.0                        |
 | 2.8.0   | 14/06/2024   | Add MongoDB config                                                                     |
