@@ -98,11 +98,11 @@ service-config:
   logging:
     level:
       root: INFO
-      com.blas: INFO
+      com.blas: DEBUG
       org.hibernate: WARN
       com.azure: WARN
       io.micrometer: WARN
-      com.hazelcast: WARN
+      com.hazelcast: ERROR
       org.mongodb: WARN
       com.zaxxer: WARN
       org.springframework: WARN
