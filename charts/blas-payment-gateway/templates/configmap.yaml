@@ -5,15 +5,15 @@ metadata:
 data:
   application.yaml: |
     server:
-      port: 8083
+      port: {{ .Values.service.targetPort }}
     spring:
       profiles:
-        active: default
+        active: {{ index .Values "service-config" "spring" "profile" }}
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://blas.mysql.database.azure.com/blas
-        username: blas
-        password: 0546550566Qq@#
+        url: jdbc:mysql://mysql-182243-0.cloudclusters.net:10013/blas
+        username: admin
+        password: 0DUTfSSC
       data:
         mongodb:
           uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
@@ -38,10 +38,10 @@ data:
       aliasBlasPrivateKey: blasSecretKey
       certificate: BlasSecretKey.p12
       service:
-        serviceName: blas-payment-gateway
+        serviceName: {{.Chart.Name}}
       blas-service-support:
         throughServiceSupport: true
-        endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local/maintenance/check
+        endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
       blas-idp:
         isSendEmailAlert: false
       blas-payment-gateway:
@@ -61,7 +61,7 @@ data:
           orderType: other
         lengthOfId: 10
       hazelcast:
-        aksNamespace: dev
+        aksNamespace: default
         hazelcastService: hazelcast
     logging:
       level:
