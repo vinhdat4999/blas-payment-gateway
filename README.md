@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                                          |
 |---------|--------------|----------------------------------------------------------------------------------------|
+| 3.4.0   | 03/09/2024   | Collect telemetry data using OpenTelemetry                                             |
 | 3.3.0   | 29/08/2024   | Change to use Blas JDK base image                                                      |
 | 3.2.0   | 15/08/2024   | Uptake blas-bom 1.21.0 and blas-common 5.15.0                                          |
 | 3.1.0   | 02/08/2024   | Revert to version 2.8.0, split Banking Payment to blas-banking-payment-gateway service |
