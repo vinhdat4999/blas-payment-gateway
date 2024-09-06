@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class VnPayProperties {
 
   private String version;
+  private String privateKey;
   private String tmnCode;
   private String payUrl;
   private String returnUrl;

@@ -1,9 +1,7 @@
 package com.blas.blaspaymentgateway.service.merchants;
 
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
-import static com.blas.blaspaymentgateway.constants.PaymentGateway.STRIPE_PRIVATE_KEY;
 
-import com.blas.blascommon.core.service.BlasConfigService;
 import com.blas.blascommon.payload.payment.CardRequest;
 import com.blas.blascommon.payload.payment.StripeAddedChargeRequest;
 import com.blas.blascommon.payload.payment.StripeGuestChargeRequest;
@@ -23,6 +21,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -34,17 +33,14 @@ public class StripeService {
   private final KeyService keyService;
 
   @Lazy
-  private final BlasConfigService blasConfigService;
-
-  @Lazy
   private final CardService cardService;
 
+  @Value("${blas.blas-payment-gateway.stripePrivateKey}")
+  private String stripePrivateKey;
+
   @PostConstruct
-  public void init()
-      throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, InvalidKeyException {
-    final String hashedSecretKey = blasConfigService.getConfigValueFromKey(STRIPE_PRIVATE_KEY);
-    final String blasSecretKey = keyService.getBlasPrivateKey();
-    Stripe.apiKey = aesDecrypt(blasSecretKey, hashedSecretKey);
+  public void init() {
+    Stripe.apiKey = stripePrivateKey;
   }
 
   public Charge addedCardCharge(final StripeAddedChargeRequest chargeRequest)

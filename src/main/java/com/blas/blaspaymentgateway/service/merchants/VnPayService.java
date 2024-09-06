@@ -1,8 +1,6 @@
 package com.blas.blaspaymentgateway.service.merchants;
 
-import static com.blas.blascommon.constants.BlasConstant.VNPAY_SECRET_KEY;
 import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
-import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.hmacSHA512;
@@ -170,9 +168,7 @@ public class VnPayService {
       }
     }
     String queryUrl = query.toString();
-    String vnpSecureHash = hmacSHA512(
-        aesDecrypt(blasPrivateKey, blasConfigService.getConfigValueFromKey(VNPAY_SECRET_KEY)),
-        hashData.toString());
+    String vnpSecureHash = hmacSHA512(vnPayProperties.getPrivateKey(), hashData.toString());
     queryUrl += "&" + VNP_SECURE_HASH + "=" + vnpSecureHash;
     vnPayPaymentTransactionLogService.createVnPayPaymentTransactionLog(
         VnPayPaymentTransactionLog.builder()
@@ -197,7 +193,7 @@ public class VnPayService {
   }
 
   public JSONObject checkOrder(HttpServletRequest request, String vnpTxnRef, String transactionDate)
-      throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+      throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
     String vnpRequestId = genNumericID(vnPayProperties.getVnpTxnRefLength());
     String vnpOrderInfo = "Kiem tra ket qua GD OrderId:" + vnpTxnRef;
 
@@ -209,7 +205,6 @@ public class VnPayService {
     vnpParams.put(VNP_REQUEST_ID, vnpRequestId);
     vnpParams.put(VNP_VERSION, vnPayProperties.getVersion());
     vnpParams.put(VNP_COMMAND, QUERYDR.getCommand());
-    final String blasPrivateKey = keyService.getBlasPrivateKey();
     final String vnpTmnCode = vnPayProperties.getTmnCode();
     vnpParams.put(VNP_TMN_CODE, vnpTmnCode);
     vnpParams.put(VNP_TXN_REF, vnpTxnRef);
@@ -222,9 +217,7 @@ public class VnPayService {
     String hashData = String.join("|", vnpRequestId, vnPayProperties.getVersion(),
         QUERYDR.getCommand(), vnpTmnCode, vnpTxnRef, transactionDate, vnpCreateDate, ipAddress,
         vnpOrderInfo);
-    String vnpSecureHash = hmacSHA512(
-        aesDecrypt(blasPrivateKey, blasConfigService.getConfigValueFromKey(VNPAY_SECRET_KEY)),
-        hashData);
+    String vnpSecureHash = hmacSHA512(vnPayProperties.getPrivateKey(), hashData);
     vnpParams.put(VNP_SECURE_HASH, vnpSecureHash);
 
     HttpResponse response = httpRequest.sendRequestWithJsonObjectPayload(

@@ -5,7 +5,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PaymentGateway {
 
-  public static final String STRIPE_PRIVATE_KEY = "STRIPE_PRIVATE_KEY";
   public static final String CARD_ID_NOT_FOUND = "CARD ID NOT FOUND";
   public static final String CARD_EXISTED = "THIS CARD ALREADY ADDED BEFORE";
   public static final String INVALID_CARD = "INVALID CARD";
