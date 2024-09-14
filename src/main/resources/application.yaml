@@ -5,12 +5,12 @@ spring:
     active: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/blas
-    username: root
-    password: 123456Qq@#
+    url: ${mysql-url-local}
+    username: ${mysql-username}
+    password: ${mysql-password}
   data:
     mongodb:
-      uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
+      uri: ${mongodb-url}
   jpa:
     hibernate:
       ddl-auto: none
@@ -42,9 +42,11 @@ blas:
   blas-idp:
     isSendEmailAlert: false
   blas-payment-gateway:
+    stripePrivateKey: ${stripe-private-key}
     vnpay:
       version: 2.1.0
-      tmnCode: RHC8EX66
+      privateKey: ${vnpay-private-key}
+      tmnCode: ${vnpay-tmn-code}
       payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
       returnUrl: http://localhost:8083
       checkOrderUrl: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
