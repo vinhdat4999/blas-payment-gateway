@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                                          |
 |---------|--------------|----------------------------------------------------------------------------------------|
+| 4.1.0   | 05/10/2024   | Add multiple namespace on Kubernetes                                                   |
 | 4.0.0   | 14/09/2024   | Integrate with Hashicorp Vault                                                         |
 | 3.4.0   | 03/09/2024   | Collect telemetry data using OpenTelemetry                                             |
 | 3.3.0   | 29/08/2024   | Change to use Blas JDK base image                                                      |

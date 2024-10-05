@@ -60,7 +60,7 @@ blas:
 logging:
   level:
     root: INFO
-    com.blas: DEBUG
+    com.blas: INFO
     org.hibernate: WARN
     com.azure: WARN
     io.micrometer: WARN
