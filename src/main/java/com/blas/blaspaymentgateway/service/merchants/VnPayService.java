@@ -41,12 +41,11 @@ import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.blas.blascommon.core.service.AuthUserService;
-import com.blas.blascommon.core.service.BlasConfigService;
+import com.blas.blascommon.core.service.http.HttpMethod;
+import com.blas.blascommon.core.service.http.HttpRequest;
 import com.blas.blascommon.enums.Currency;
 import com.blas.blascommon.payload.HttpResponse;
 import com.blas.blascommon.security.KeyService;
-import com.blas.blascommon.utils.httprequest.HttpMethod;
-import com.blas.blascommon.utils.httprequest.HttpRequest;
 import com.blas.blaspaymentgateway.model.VnPayPaymentTransactionLog;
 import com.blas.blaspaymentgateway.properties.VnPayProperties;
 import com.blas.blaspaymentgateway.service.VnPayPaymentTransactionLogService;
@@ -94,9 +93,6 @@ public class VnPayService {
 
   @Lazy
   private final KeyService keyService;
-
-  @Lazy
-  private final BlasConfigService blasConfigService;
 
   @Lazy
   private final HttpRequest httpRequest;
