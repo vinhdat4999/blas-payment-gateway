@@ -34,31 +34,33 @@ data:
         health:
           probes:
             enabled: true
+
     blas:
-      aliasBlasPrivateKey: blasSecretKey
-      certificate: BlasSecretKey.p12
+      aliasBlasPrivateKey: {{ index .Values "service-config" "blas" "aliasBlasPrivateKey" }}
+      certificate: {{ index .Values "service-config" "blas" "certificate" }}
       service:
         serviceName: {{ .Chart.Name }}
       blas-service-support:
-        throughServiceSupport: true
-        endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
+        throughServiceSupport: {{ index .Values "service-config" "blas" "blas-service-support" "throughServiceSupport" }}
+        endpointCheckMaintenance: {{ index .Values "service-config" "blas" "blas-service-support" "endpointCheckMaintenance" }}
       blas-idp:
-        isSendEmailAlert: false
+        isSendEmailAlert: {{ index .Values "service-config" "blas" "blas-idp" "isSendEmailAlert" }}
       blas-payment-gateway:
         stripePrivateKey: ${stripe-private-key}
         vnpay:
-          version: 2.1.0
+          version: {{ index .Values "service-config" "blas" "blas-payment-gateway" "vnpay" "version" }}
           privateKey: ${vnpay-private-key}
           tmnCode: ${vnpay-tmn-code}
-          payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-          returnUrl: http://localhost:8083
-          checkOrderUrl: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
-          vnpTxnRefLength: 8
-          orderType: other
-        lengthOfId: 10
+          payUrl: {{ index .Values "service-config" "blas" "blas-payment-gateway" "vnpay" "payUrl" }}
+          returnUrl: {{ index .Values "service-config" "blas" "blas-payment-gateway" "vnpay" "returnUrl" }}
+          checkOrderUrl: {{ index .Values "service-config" "blas" "blas-payment-gateway" "vnpay" "checkOrderUrl" }}
+          vnpTxnRefLength: {{ index .Values "service-config" "blas" "blas-payment-gateway" "vnpay" "vnpTxnRefLength" }}
+          orderType: {{ index .Values "service-config" "blas" "blas-payment-gateway" "vnpay" "orderType" }}
+        lengthOfId: {{ index .Values "service-config" "blas" "blas-payment-gateway" "lengthOfId" }}
       hazelcast:
-        aksNamespace: default
-        hazelcastService: hazelcast
+        aksNamespace: {{ .Values.aksNamespace }}
+        hazelcastService: {{ .Values.hazelcastService }}
+
     logging:
       level:
 {{- range $key, $value := index .Values "service-config" "logging" "level" }}

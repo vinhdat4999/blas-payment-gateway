@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                                          |
 |---------|--------------|----------------------------------------------------------------------------------------|
+| 4.3.0   | 23/11/2024   | Uptake blas-common 6.3.0                                                               |
 | 4.2.0   | 11/11/2024   | Uptake blas-bom 1.23.0 and blas-common 6.2.0                                           |
 | 4.1.0   | 05/10/2024   | Add multiple namespace on Kubernetes                                                   |
 | 4.0.0   | 14/09/2024   | Integrate with Hashicorp Vault                                                         |
