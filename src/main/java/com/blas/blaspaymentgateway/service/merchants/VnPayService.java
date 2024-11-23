@@ -4,11 +4,11 @@ import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.hmacSHA512;
-import static com.blas.blascommon.utils.IdUtils.genNumericID;
-import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blascommon.utils.IpUtils.getIpAddress;
 import static com.blas.blascommon.utils.datetimeutils.DateTimeUtils.DATE_YYYYMMDDHHMMSS_SLASH_FORMAT;
 import static com.blas.blascommon.utils.datetimeutils.DateTimeUtils.GMT7_POSITIVE_ZONE;
+import static com.blas.blascommon.utils.idutils.IdUtils.genNumericID;
+import static com.blas.blascommon.utils.idutils.IdUtils.genUniqueId;
 import static com.blas.blaspaymentgateway.constants.VnPay.HASHED_TRANSACTION_DATE;
 import static com.blas.blaspaymentgateway.constants.VnPay.HASHED_VNP_TXN_REF;
 import static com.blas.blaspaymentgateway.constants.VnPay.LANGUAGE;
@@ -128,7 +128,7 @@ public class VnPayService {
     vnpParams.put(VNP_CREATE_DATE, vnpCreateDate);
     final String hashedVnpTxnRef = aesEncrypt(blasPrivateKey, vnpTxnRef);
     final String hashedTransactionDate = aesEncrypt(blasPrivateKey, vnpCreateDate);
-    final String paymentTransactionLogId = genUUID();
+    final String paymentTransactionLogId = genUniqueId();
     vnpParams.put(VNP_RETURN_URL,
         String.format(
             "%s/vnpay/handle-payment?%s=%s&%s=%s&%s=%s",

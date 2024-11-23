@@ -1,7 +1,7 @@
 package com.blas.blaspaymentgateway.service.impl;
 
 import static com.blas.blascommon.constants.ResponseMessage.USER_ID_NOT_FOUND;
-import static com.blas.blascommon.utils.IdUtils.genUUID;
+import static com.blas.blascommon.utils.idutils.IdUtils.genUniqueId;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ID_NOT_FOUND;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.INVALID_CARD;
 
@@ -30,7 +30,7 @@ public class CardServiceImpl implements CardService {
 
   @Override
   public String addNewCard(Card card) {
-    card.setCardId(genUUID());
+    card.setCardId(genUniqueId());
     return cardDao.save(card).getCardId();
   }
 

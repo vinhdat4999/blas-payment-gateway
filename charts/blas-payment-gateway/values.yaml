@@ -102,6 +102,26 @@ affinity: { }
 service-config:
   spring:
     profile: aks
+
+  blas:
+    aliasBlasPrivateKey: blasSecretKey
+    certificate: BlasSecretKey.p12
+    blas-service-support:
+      throughServiceSupport: true
+      endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local:8084/maintenance/check
+    blas-idp:
+      isSendEmailAlert: true
+    blas-payment-gateway:
+      stripePrivateKey: ${stripe-private-key}
+      vnpay:
+        version: 2.1.0
+        payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+        returnUrl: http://localhost:8083
+        checkOrderUrl: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+        vnpTxnRefLength: 8
+        orderType: other
+      lengthOfId: 10
+
   logging:
     level:
       root: INFO

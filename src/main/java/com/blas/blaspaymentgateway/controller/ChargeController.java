@@ -4,7 +4,7 @@ import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.enums.EmailTemplate.STRIPE_PAYMENT_RECEIPT;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
-import static com.blas.blascommon.utils.IdUtils.genMixID;
+import static com.blas.blascommon.utils.idutils.IdUtils.genMixID;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.CARD_ID_MDC_KEY;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.SUBJECT_EMAIL_RECEIPT;
 import static com.blas.blaspaymentgateway.constants.PaymentGateway.TRANSACTION_FAILED;
