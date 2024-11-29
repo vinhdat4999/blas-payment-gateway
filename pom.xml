@@ -15,7 +15,7 @@
   <properties>
     <java.version>${project.java.version}</java.version>
     <com.blas.blas.common.version>6.6.0</com.blas.blas.common.version>
-    <com.blas.blas-logging-aspect.version>1.1.0</com.blas.blas-logging-aspect.version>
+    <com.blas.blas-logging-aspect.version>1.0.0</com.blas.blas-logging-aspect.version>
     <maven.compiler.source>${project.java.version}</maven.compiler.source>
     <maven.compiler.target>${project.java.version}</maven.compiler.target>
   </properties>
