@@ -1,6 +1,6 @@
 package com.blas.blaspaymentgateway.service.merchants;
 
-import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
+import static com.blas.blascommon.constants.MdcConstants.GLOBAL_ID;
 import static com.blas.blascommon.security.SecurityUtils.aesEncrypt;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.hmacSHA512;
