@@ -1,6 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
-import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
+import static com.blas.blascommon.constants.MdcConstants.GLOBAL_ID;
 import static com.blas.blascommon.enums.EmailTemplate.STRIPE_PAYMENT_RECEIPT;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;

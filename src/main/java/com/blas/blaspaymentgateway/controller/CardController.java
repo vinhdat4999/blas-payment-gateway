@@ -1,6 +1,6 @@
 package com.blas.blaspaymentgateway.controller;
 
-import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
+import static com.blas.blascommon.constants.MdcConstants.GLOBAL_ID;
 import static com.blas.blascommon.enums.EmailTemplate.ADD_CARD_SUCCESS;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_BLAS_APP_FAILURE;
 import static com.blas.blascommon.security.SecurityUtils.aesDecrypt;

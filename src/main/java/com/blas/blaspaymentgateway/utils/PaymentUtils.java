@@ -6,6 +6,6 @@ import lombok.experimental.UtilityClass;
 public class PaymentUtils {
 
   public static String maskCardNumber(String cardNumber) {
-    return cardNumber.replaceAll("^.{1,12}", "*".repeat(12));
+    return cardNumber.replaceAll("^.{1,12}", "*" .repeat(12));
   }
 }
