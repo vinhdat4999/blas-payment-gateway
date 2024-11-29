@@ -108,8 +108,8 @@ public abstract class ChargeController<T extends StripeChargeRequest> {
         .isGuestCard(chargeRequest instanceof StripeGuestChargeRequest)
         .build();
 
-    log.info(
-        "blasPaymentTransactionLogId: " + stripePaymentTransactionLog.getPaymentTransactionLogId());
+    log.info("blasPaymentTransactionLogId: {}",
+        stripePaymentTransactionLog.getPaymentTransactionLogId());
 
     String plainTextCardNumber = preprocessCharge(chargeRequest, stripePaymentTransactionLog);
 
@@ -138,9 +138,8 @@ public abstract class ChargeController<T extends StripeChargeRequest> {
       stripePaymentTransactionLog.setRefund(charge.getRefunded());
 
       Charge finalCharge = charge;
-      new Thread(
-          () -> sendStripeReceiptEmail(stripePaymentTransactionLog, username, plainTextCardNumber,
-              finalCharge)).start();
+      sendStripeReceiptEmail(stripePaymentTransactionLog, username, plainTextCardNumber,
+          finalCharge);
 
       ChargeResponse response = buildChargeResponse(
           stripePaymentTransactionLog.getPaymentTransactionLogId(), charge,
