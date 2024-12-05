@@ -6,6 +6,7 @@ Payment gateway for BLAS using Stripe
 
 | Version | Date release | Tickets/Notes                                                                          |
 |---------|--------------|----------------------------------------------------------------------------------------|
+| 4.5.0   | 05/12/2024   | Add OpenTelemetry agent extension                                                      |
 | 4.4.0   | 29/11/2024   | Support OpenTelemetry log data model and trace                                         |
 | 4.3.0   | 23/11/2024   | Uptake blas-common 6.3.0                                                               |
 | 4.2.0   | 11/11/2024   | Uptake blas-bom 1.23.0 and blas-common 6.2.0                                           |
