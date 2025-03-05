@@ -143,7 +143,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ needs.prepare.outputs.serviceName }}:${{ needs.prepare.outputs.serviceVersion }}
           build-args: |
-            PACKAGE=${{ secrets.PACKAGE }}  
+            PACKAGE=${{ secrets.PACKAGE }}
 
       - name: Logout from Docker Hub
         run: docker logout
